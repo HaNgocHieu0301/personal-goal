@@ -1,0 +1,6 @@
+.agent/
+docs/
+design-system/
+web/node_modules
+web/.next
+web/.env

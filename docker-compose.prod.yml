@@ -30,8 +30,13 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@personal-db:5432/${POSTGRES_DB:-personal_goal}?sslmode=disable
-      - REDIS_URL=redis://personal-redis:6379
+      - DB_HOST=personal-db
+      - DB_PORT=5432
+      - DB_USER=${POSTGRES_USER:-postgres}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - DB_NAME=${POSTGRES_DB:-personal_goal}
+      - REDIS_HOST=personal-redis
+      - REDIS_PORT=6379
       - FRONTEND_URL=https://${DOMAIN:-app.domain.com}
       - PORT=8080
       - OS_TYPE=linux

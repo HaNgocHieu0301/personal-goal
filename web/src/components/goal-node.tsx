@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Progress } from "./ui/progress";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Input } from "./ui/input";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -25,7 +25,8 @@ import {
     useCreateGoal,
     useUpdateGoal,
     useDeleteGoal,
-    useToggleFocus
+    useToggleFocus,
+    useGoals
 } from "@/hooks/use-goals";
 
 interface GoalNodeProps {
@@ -39,14 +40,31 @@ export function GoalNodeItem({ node, level = 0 }: GoalNodeProps) {
     const updateGoalMutation = useUpdateGoal();
     const deleteGoalMutation = useDeleteGoal();
     const toggleFocusMutation = useToggleFocus();
+    const { data: allGoals } = useGoals();
 
     const isExpanded = expandedNodeIds.has(node.id);
 
     const [isHovered, setIsHovered] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [isLinkOpen, setIsLinkOpen] = useState(false);
     const [newGoalTitle, setNewGoalTitle] = useState("");
     const [editTitle, setEditTitle] = useState(node.title);
+
+    const linkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const openLinkPopover = () => {
+        if (linkTimeoutRef.current) {
+            clearTimeout(linkTimeoutRef.current);
+        }
+        setIsLinkOpen(true);
+    };
+
+    const closeLinkPopover = () => {
+        linkTimeoutRef.current = setTimeout(() => {
+            setIsLinkOpen(false);
+        }, 150);
+    };
 
     const handleAddChild = () => {
         if (newGoalTitle.trim()) {
@@ -168,9 +186,95 @@ export function GoalNodeItem({ node, level = 0 }: GoalNodeProps) {
                         </PopoverContent>
                     </Popover>
 
-                    {node.progress > 0 && (
+                    {/* Link to Yearly Goal (Only show for Top-Level Monthly Tasks) */}
+                    {level === 0 && (!node.targetPeriod || node.targetPeriod.length > 4) && (
+                        <Popover open={isLinkOpen} onOpenChange={setIsLinkOpen}>
+                            <PopoverTrigger asChild>
+                                <button
+                                    className={cn(
+                                        "flex items-center text-xs text-muted-foreground ml-2 hover:text-foreground transition-colors",
+                                        !node.parentId && "opacity-0 group-hover:opacity-100"
+                                    )}
+                                    title="Link to Yearly Goal"
+                                >
+                                    <Target className="h-3 w-3 mr-1 text-primary/70" />
+                                    {node.parentId && allGoals?.some(g => g.id === node.parentId) ? "Linked" : "Link"}
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                                className="w-56 p-2"
+                                align="start"
+                                onMouseEnter={openLinkPopover}
+                                onMouseLeave={closeLinkPopover}
+                            >
+                                <div className="space-y-2">
+                                    <h4 className="font-medium text-sm">Link to Yearly Goal</h4>
+                                    <div className="flex flex-col gap-1">
+                                        {allGoals?.filter(g => g.targetPeriod?.length === 4 && !g.parentId).map(yearlyGoal => {
+                                            const totalChildren = yearlyGoal.children?.length || 0;
+                                            const completedChildren = yearlyGoal.children?.filter((c: GoalNode) => c.status === 'done').length || 0;
+                                            const hasSessions = yearlyGoal.targetSessions && yearlyGoal.targetSessions > 0;
+                                            let displayProgress = yearlyGoal.progress;
+
+                                            if (yearlyGoal.status === 'done') {
+                                                displayProgress = 100;
+                                            } else if (hasSessions) {
+                                                displayProgress = Math.round(((yearlyGoal.completedSessions || 0) / (yearlyGoal.targetSessions || 1)) * 100);
+                                            } else if (totalChildren > 0) {
+                                                displayProgress = Math.round((completedChildren / totalChildren) * 100);
+                                            }
+
+                                            return (
+                                                <Button
+                                                    key={yearlyGoal.id}
+                                                    variant={node.parentId === yearlyGoal.id ? "default" : "ghost"}
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        updateGoalMutation.mutate({
+                                                            ...node,
+                                                            parentId: node.parentId === yearlyGoal.id ? null : yearlyGoal.id
+                                                        });
+                                                        setIsLinkOpen(false);
+                                                    }}
+                                                    className="justify-start text-xs h-auto flex-col items-start py-2"
+                                                >
+                                                    <span className="font-medium text-sm">{yearlyGoal.title}</span>
+                                                    <div className="flex justify-between text-[10px] text-muted-foreground w-full mt-1">
+                                                        <span>Progress</span>
+                                                        <span>
+                                                            {yearlyGoal.status === 'done'
+                                                                ? (hasSessions ? `${yearlyGoal.targetSessions}/${yearlyGoal.targetSessions}` : "Completed! 🎉")
+                                                                : (hasSessions ? `${yearlyGoal.completedSessions || 0}/${yearlyGoal.targetSessions}` : `${displayProgress}%`)}
+                                                        </span>
+                                                    </div>
+                                                    <Progress value={displayProgress} className="h-1 w-full mt-1" />
+                                                </Button>
+                                            );
+                                        })}
+                                        {allGoals?.filter(g => g.targetPeriod?.length === 4 && !g.parentId).length === 0 && (
+                                            <p className="text-xs text-muted-foreground py-2 text-center">No Yearly Goals available.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    )}
+
+                    {node.targetSessions && node.targetSessions > 0 ? (
+                        <div className="flex items-center gap-2 ml-2">
+                            <Progress
+                                value={node.status === 'done' ? 100 : ((node.completedSessions || 0) / node.targetSessions * 100)}
+                                className="h-1.5 w-16"
+                            />
+                            <span className="text-[10px] text-muted-foreground font-mono whitespace-nowrap">
+                                {node.status === 'done'
+                                    ? `${node.targetSessions}/${node.targetSessions}`
+                                    : `${node.completedSessions || 0}/${node.targetSessions}`}
+                            </span>
+                        </div>
+                    ) : (node.progress > 0 || node.status === 'done') && (
                         <div className="w-16 ml-2">
-                            <Progress value={node.progress} className="h-1.5" />
+                            <Progress value={node.status === 'done' ? 100 : node.progress} className="h-1.5" />
                         </div>
                     )}
                 </div>

@@ -18,13 +18,16 @@ export default function Home() {
   // State for active task selection in Warrior Mode
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
-  // Helper to find focused nodes recursively
-  const getFocusedNodes = (nodes: any[]): any[] => {
+  // Helper to find focused nodes recursively without duplicates
+  const getFocusedNodes = (nodes: any[], seen = new Set<string>()): any[] => {
     let focusNodes: any[] = [];
     nodes.forEach(node => {
+      if (seen.has(node.id)) return;
+      seen.add(node.id);
+
       if (node.isFocus) focusNodes.push(node);
       if (node.children?.length > 0) {
-        focusNodes = [...focusNodes, ...getFocusedNodes(node.children)];
+        focusNodes = [...focusNodes, ...getFocusedNodes(node.children, seen)];
       }
     });
     return focusNodes;
@@ -49,38 +52,66 @@ export default function Home() {
   const activeTask = focusedTasks.find(t => t.id === activeTaskId) || null;
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 bg-background text-foreground">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex mb-8">
-        <p className="flex w-full justify-center lg:justify-start border-b border-border bg-background pb-6 pt-8 backdrop-blur-2xl lg:static lg:w-auto lg:rounded-xl lg:border lg:p-4">
-          Personal Goal OS&nbsp;
-          <code className="font-mono font-bold">v0.1.0</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none gap-2">
-          <ThemeToggle />
-          <SettingsDialog />
-        </div>
-      </div>
+    <main className="flex min-h-[100dvh] flex-col items-center p-4 md:p-8 bg-background text-foreground pb-24 md:pb-8 transition-colors">
+      <Tabs defaultValue="architect" className="w-full flex flex-col items-center">
 
-      <div className="w-full max-w-4xl">
-        <Tabs defaultValue="architect" className="w-full">
-          <div className="flex justify-center mb-8">
-            <TabsList className="grid w-full max-w-[400px] grid-cols-2">
-              <TabsTrigger value="architect">
-                <LayoutDashboard className="w-4 h-4 mr-2" />
+        {/* Global Header (Max-W-7xl) - Desktop & Tablet */}
+        <div className="z-10 w-full max-w-7xl flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+
+          {/* Brand / Logo */}
+          <div className="w-full md:w-auto flex justify-center md:justify-start">
+            <div className="flex items-center gap-2 border border-border/50 bg-background/50 backdrop-blur-xl px-4 py-2 rounded-xl shadow-sm">
+              <span className="font-semibold tracking-tight">Personal Goal OS</span>
+              <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-mono font-medium">v0.1.0</span>
+            </div>
+          </div>
+
+          {/* Desktop Tabs (Hidden on mobile) */}
+          <div className="hidden md:flex items-center">
+            <TabsList className="grid w-[300px] grid-cols-2 bg-muted/40 border border-border/50 p-1 rounded-full h-10 shadow-inner">
+              <TabsTrigger value="architect" className="rounded-full rounded-r-none transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:font-medium text-xs tracking-wider uppercase">
+                <LayoutDashboard className="w-3.5 h-3.5 mr-2 opacity-70" />
                 Architect
               </TabsTrigger>
-              <TabsTrigger value="warrior">
-                <Crosshair className="w-4 h-4 mr-2" />
+              <TabsTrigger value="warrior" className="rounded-full rounded-l-none transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:font-medium text-xs tracking-wider uppercase">
+                <Crosshair className="w-3.5 h-3.5 mr-2 opacity-70" />
                 Warrior
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="architect" className="mt-0">
+          {/* Desktop Settings / Theme (Hidden on mobile) */}
+          <div className="hidden md:flex items-center gap-2">
+            <ThemeToggle />
+            <SettingsDialog />
+          </div>
+        </div>
+
+        {/* Mobile Bottom Navigation Bar (Fixed) */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-background/90 backdrop-blur-xl border-t border-border shadow-[0_-10px_40px_rgba(0,0,0,0.05)] safe-area-pb">
+          <TabsList className="bg-transparent border-none p-0 h-auto gap-6 w-auto justify-start">
+            <TabsTrigger value="architect" className="flex-col gap-1 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary text-muted-foreground h-auto p-1 focus:ring-0">
+              <LayoutDashboard className="w-5 h-5 mb-0.5" />
+              <span className="text-[10px] font-medium tracking-wide uppercase">Architect</span>
+            </TabsTrigger>
+            <TabsTrigger value="warrior" className="flex-col gap-1 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary text-muted-foreground h-auto p-1 focus:ring-0">
+              <Crosshair className="w-5 h-5 mb-0.5" />
+              <span className="text-[10px] font-medium tracking-wide uppercase">Warrior</span>
+            </TabsTrigger>
+          </TabsList>
+          <div className="flex gap-2 items-center ml-auto">
+            <ThemeToggle />
+            <SettingsDialog />
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="w-full max-w-7xl">
+          <TabsContent value="architect" className="mt-0 w-full animate-in fade-in duration-300">
             <GoalTree />
           </TabsContent>
 
-          <TabsContent value="warrior" className="mt-0 flex flex-col items-center w-full min-h-[400px]">
+          <TabsContent value="warrior" className="mt-0 flex flex-col items-center w-full min-h-[400px] animate-in fade-in duration-300">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center p-20 space-y-4">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -92,7 +123,7 @@ export default function Home() {
                 <p className="text-sm opacity-80 mt-1">Warrior mode requires the mission database.</p>
               </div>
             ) : focusedTasks.length > 0 ? (
-              <div className="flex flex-col md:flex-row gap-6 w-full max-w-4xl">
+              <div className="flex flex-col md:flex-row gap-6 w-full max-w-7xl">
                 {/* Mission List */}
                 <div className="w-full md:w-1/3 space-y-4 font-mono">
                   <div className="flex items-center justify-between mb-2">
@@ -169,8 +200,8 @@ export default function Home() {
               </div>
             )}
           </TabsContent>
-        </Tabs>
-      </div>
+        </div>
+      </Tabs>
     </main>
   );
 }

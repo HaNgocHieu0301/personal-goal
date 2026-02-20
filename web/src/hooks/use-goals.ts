@@ -28,9 +28,21 @@ const buildTree = (nodes: GoalNode[]): any[] => {
 
     const tree: any[] = [];
     sortedNodes.forEach((node) => {
-        if (node.parentId && map.has(node.parentId)) {
-            map.get(node.parentId).children.push(map.get(node.id));
+        let isRoot = false;
+
+        if (!node.parentId || !map.has(node.parentId)) {
+            isRoot = true;
         } else {
+            const parent = map.get(node.parentId);
+            parent.children.push(map.get(node.id));
+
+            // Promote to root if parent is a Yearly goal but node is a Monthly goal or less
+            if (parent.targetPeriod?.length === 4 && (!node.targetPeriod || node.targetPeriod.length > 4)) {
+                isRoot = true;
+            }
+        }
+
+        if (isRoot) {
             tree.push(map.get(node.id));
         }
     });

@@ -2,27 +2,52 @@
 
 import { useState } from "react";
 import { useGoals, useCreateGoal } from "@/hooks/use-goals";
+import { useGoalStore } from "@/stores/goal-store";
 import { GoalNodeItem } from "@/components/goal-node";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Loader2, Circle, CalendarDays, ChevronRight } from "lucide-react";
+import { Plus, Loader2, Circle, CalendarDays, ChevronRight, Star, ChevronDown } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { format, addMonths, subMonths } from "date-fns";
+import { YearlyCompass } from "@/components/yearly-compass";
 
 // Generate a list of periods for the sidebar
 const generatePeriods = () => {
-    const periods = [];
+    const periods: Array<{ value: string; label: string; isYear: boolean; isCurrent: boolean }> = [];
     const now = new Date();
-    // Start from 2 months ago, go up to 6 months in future
+
+    // Collect all months to show (-2 to +6 relative to now)
+    const months: Date[] = [];
     for (let i = -2; i <= 6; i++) {
         const d = i < 0 ? subMonths(now, Math.abs(i)) : addMonths(now, i);
-        periods.push({
-            value: format(d, "yyyy-MM"),
-            label: format(d, "MMMM yyyy"),
-            isCurrent: i === 0
-        });
+        months.push(d);
     }
+
+    // Group them by unique years
+    const uniqueYears = [...new Set(months.map(d => format(d, "yyyy")))];
+
+    uniqueYears.forEach(yearStr => {
+        // Add Year Header
+        periods.push({
+            value: yearStr,
+            label: `Year ${yearStr}`,
+            isYear: true,
+            isCurrent: yearStr === format(now, "yyyy")
+        });
+
+        // Add Months belonging to this Year
+        const yearMonths = months.filter(d => format(d, "yyyy") === yearStr);
+        yearMonths.forEach(d => {
+            periods.push({
+                value: format(d, "yyyy-MM"),
+                label: format(d, "MMMM yyyy"),
+                isYear: false,
+                isCurrent: d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+            });
+        });
+    });
+
     return periods;
 };
 
@@ -32,10 +57,14 @@ export function GoalTree() {
     const [isAddingTopLevel, setIsAddingTopLevel] = useState(false);
     const [topLevelTitle, setTopLevelTitle] = useState("");
 
-    // Timeline Sidebar State
+    // Timeline Sidebar State (Persisted in GoalStore)
     const periods = generatePeriods();
-    const currentPeriodValue = periods.find(p => p.isCurrent)?.value || format(new Date(), "yyyy-MM");
-    const [selectedPeriod, setSelectedPeriod] = useState<string>(currentPeriodValue);
+    const {
+        selectedPeriod,
+        setSelectedPeriod,
+        expandedYears,
+        toggleYear
+    } = useGoalStore();
 
     if (isLoading) {
         return (
@@ -80,8 +109,10 @@ export function GoalTree() {
         }
     };
 
+    const isYearlyView = selectedPeriod.length === 4;
+
     return (
-        <div className="flex flex-col md:flex-row w-full max-w-5xl mx-auto gap-6 p-4">
+        <div className="flex flex-col md:flex-row w-full max-w-7xl xl:max-w-none xl:px-8 mx-auto gap-6 p-4">
 
             {/* Left Sidebar: Timeline */}
             <div className="w-full md:w-64 shrink-0 space-y-4">
@@ -92,29 +123,77 @@ export function GoalTree() {
 
                 <ScrollArea className="h-[60vh] pr-4">
                     <div className="space-y-1">
-                        {periods.map((period) => (
-                            <button
-                                key={period.value}
-                                onClick={() => setSelectedPeriod(period.value)}
-                                className={cn(
-                                    "w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors",
-                                    selectedPeriod === period.value
-                                        ? "bg-primary text-primary-foreground font-medium shadow-sm"
-                                        : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                <span className="flex items-center gap-2">
-                                    {period.label}
-                                    {period.isCurrent && (
-                                        <span className={cn(
-                                            "w-2 h-2 rounded-full",
-                                            selectedPeriod === period.value ? "bg-primary-foreground" : "bg-primary"
-                                        )} />
-                                    )}
-                                </span>
-                                {selectedPeriod === period.value && <ChevronRight className="h-4 w-4 opacity-50" />}
-                            </button>
-                        ))}
+                        {periods.map((period) => {
+                            if (period.isYear) {
+                                const isExpanded = expandedYears.has(period.value);
+                                return (
+                                    <div
+                                        key={period.value}
+                                        className={cn(
+                                            "w-full flex items-center justify-between rounded-md transition-all mb-2 mt-6 first:mt-0 overflow-hidden",
+                                            selectedPeriod === period.value
+                                                ? "bg-primary text-primary-foreground shadow-md"
+                                                : "bg-muted/40 border border-border hover:bg-muted text-foreground"
+                                        )}
+                                    >
+                                        <button
+                                            onClick={() => setSelectedPeriod(period.value)}
+                                            className="flex-1 flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase tracking-wider text-left"
+                                        >
+                                            <Star
+                                                className={cn(
+                                                    "w-4 h-4 transition-transform shrink-0",
+                                                    selectedPeriod === period.value
+                                                        ? "fill-primary-foreground/30 text-primary-foreground"
+                                                        : "fill-amber-500 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]",
+                                                    !isExpanded && "opacity-80"
+                                                )}
+                                            />
+                                            <span className="truncate">{period.label}</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => toggleYear(period.value)}
+                                            className="px-3 py-2 shrink-0 flex items-center justify-center opacity-70 hover:opacity-100 hover:bg-foreground/10 transition-all rounded-r-md"
+                                            title="Toggle months"
+                                        >
+                                            <ChevronDown className={cn(
+                                                "h-4 w-4 transition-transform",
+                                                !isExpanded && "-rotate-90"
+                                            )} />
+                                        </button>
+                                    </div>
+                                );
+                            } else {
+                                // Month rendering
+                                const belongsToYear = period.value.substring(0, 4);
+                                if (!expandedYears.has(belongsToYear)) return null;
+
+                                return (
+                                    <button
+                                        key={period.value}
+                                        onClick={() => setSelectedPeriod(period.value)}
+                                        className={cn(
+                                            "w-[calc(100%-1rem)] flex items-center justify-between px-3 py-2 text-sm ml-4 rounded-md transition-all animate-in slide-in-from-top-2 fade-in duration-200",
+                                            selectedPeriod === period.value
+                                                ? "bg-primary text-primary-foreground shadow-md"
+                                                : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                                        )}
+                                    >
+                                        <span className="flex items-center gap-2">
+                                            {period.label}
+                                            {period.isCurrent && (
+                                                <span className={cn(
+                                                    "w-2 h-2 rounded-full",
+                                                    selectedPeriod === period.value ? "bg-primary-foreground" : "bg-primary"
+                                                )} />
+                                            )}
+                                        </span>
+                                        {selectedPeriod === period.value && <ChevronRight className="h-4 w-4 opacity-50" />}
+                                    </button>
+                                );
+                            }
+                        })}
                     </div>
                 </ScrollArea>
             </div>
@@ -128,6 +207,7 @@ export function GoalTree() {
                             Planning for {periods.find(p => p.value === selectedPeriod)?.label}
                         </p>
                     </div>
+
                     <Button
                         variant="default"
                         size="sm"
@@ -136,11 +216,12 @@ export function GoalTree() {
                         className="shadow-sm"
                     >
                         {createGoalMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
-                        Add Goal
+                        {isYearlyView ? "Add Yearly Goal" : "Add Goal"}
                     </Button>
                 </div>
 
                 <div className="space-y-1 pb-20">
+                    {/* Add Top Level Input */}
                     {isAddingTopLevel && (
                         <div className="flex items-center gap-2 py-2 px-2 rounded-md bg-muted/50 border border-primary/20 mb-4 animate-in fade-in slide-in-from-top-2">
                             <div className="w-4 h-4" /> {/* Expand spacer */}
@@ -160,24 +241,32 @@ export function GoalTree() {
                         </div>
                     )}
 
-                    <div className="space-y-2">
-                        {filteredGoalList.map((goal) => (
-                            <GoalNodeItem key={goal.id} node={goal} />
-                        ))}
-                    </div>
+                    {/* Render different views depending on the length of the string */}
+                    {isYearlyView ? (
+                        <>
+                            <YearlyCompass goals={goals || []} year={selectedPeriod} />
 
-                    {filteredGoalList.length === 0 && !isAddingTopLevel && (
-                        <div className="text-center py-20 text-muted-foreground flex flex-col items-center justify-center border-2 border-dashed rounded-lg bg-muted/10">
-                            <CalendarDays className="h-10 w-10 mb-4 opacity-20" />
-                            <p className="text-lg font-medium">No goals found for this period</p>
-                            <p className="text-sm opacity-70 mt-1">Start by adding a new goal above to plan your month.</p>
-                            <Button
-                                variant="outline"
-                                className="mt-6"
-                                onClick={() => setIsAddingTopLevel(true)}
-                            >
-                                Create First Goal
-                            </Button>
+                        </>
+                    ) : (
+                        <div className="space-y-2 animate-in fade-in duration-300">
+                            {filteredGoalList.map((goal) => (
+                                <GoalNodeItem key={goal.id} node={goal} />
+                            ))}
+
+                            {filteredGoalList.length === 0 && !isAddingTopLevel && (
+                                <div className="text-center py-20 text-muted-foreground flex flex-col items-center justify-center border-2 border-dashed rounded-lg bg-muted/10">
+                                    <CalendarDays className="h-10 w-10 mb-4 opacity-20" />
+                                    <p className="text-lg font-medium">No goals found for this period</p>
+                                    <p className="text-sm opacity-70 mt-1">Start by adding a new goal above to plan your month.</p>
+                                    <Button
+                                        variant="outline"
+                                        className="mt-6"
+                                        onClick={() => setIsAddingTopLevel(true)}
+                                    >
+                                        Create First Goal
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

@@ -8,13 +8,26 @@ const api = axios.create({
     baseURL: API_URL,
 });
 
+const sortNodes = (a: GoalNode, b: GoalNode) => {
+    // 1. "done" status goes to the bottom
+    if (a.status === 'done' && b.status !== 'done') return 1;
+    if (a.status !== 'done' && b.status === 'done') return -1;
+
+    // 2. Fallback: sort by creation date ascending (oldest first)
+    const dateA = new Date(a.createdAt || 0).getTime();
+    const dateB = new Date(b.createdAt || 0).getTime();
+    return dateA - dateB;
+};
+
 // Helper to build tree from flat list
 const buildTree = (nodes: GoalNode[]): any[] => {
     const map = new Map<string, any>();
-    nodes.forEach((node) => map.set(node.id, { ...node, children: [] }));
+    const sortedNodes = [...nodes].sort(sortNodes);
+
+    sortedNodes.forEach((node) => map.set(node.id, { ...node, children: [] }));
 
     const tree: any[] = [];
-    nodes.forEach((node) => {
+    sortedNodes.forEach((node) => {
         if (node.parentId && map.has(node.parentId)) {
             map.get(node.parentId).children.push(map.get(node.id));
         } else {

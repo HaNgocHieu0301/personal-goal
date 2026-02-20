@@ -14,6 +14,8 @@ export interface GoalNode {
     updatedAt: Date;
     deadline?: Date | string; // Optional deadline, can be Date object or ISO string
     isFocus?: boolean; // Select for Warrior Mode (The Big 3)
+    targetSessions?: number; // Number of sessions user needs to complete to auto-finish the goal
+    completedSessions?: number; // Number of focus sessions completed for this task
 }
 
 export interface UserMetrics {

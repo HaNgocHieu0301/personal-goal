@@ -120,3 +120,6 @@ Dựa trên yêu cầu về hiệu suất, khả năng mở rộng và định h
 
 * **Rủi ro:** Người dùng gian lận khi xác nhận nộp phạt.  
 * **Giải pháp:** Bản chất ứng dụng là tự phục vụ bản thân. Việc lưu lại lịch sử "Gian lận" hoặc "Thất bại" chính là tấm gương phản chiếu để người dùng tự đối diện với kỷ luật của mình.
+
+# IMPORTANT:
+- Luôn luôn cập nhật những thay đổi vào docs

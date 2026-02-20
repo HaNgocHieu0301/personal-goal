@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Crosshair, LayoutDashboard, ListChecks, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { SettingsDialog } from "@/components/settings-dialog";
 
 export default function Home() {
   const { data: goals, isLoading, error } = useGoals();
@@ -53,6 +54,9 @@ export default function Home() {
           Personal Goal OS&nbsp;
           <code className="font-mono font-bold">v0.1.0</code>
         </p>
+        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
+          <SettingsDialog />
+        </div>
       </div>
 
       <div className="w-full max-w-4xl">

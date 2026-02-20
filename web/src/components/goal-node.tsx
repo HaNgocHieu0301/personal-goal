@@ -19,6 +19,8 @@ import { Progress } from "./ui/progress";
 import { useState } from "react";
 import { Input } from "./ui/input";
 import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Calendar as CalendarComponent } from "./ui/calendar";
 import {
     useCreateGoal,
     useUpdateGoal,
@@ -139,12 +141,32 @@ export function GoalNodeItem({ node, level = 0 }: GoalNodeProps) {
                         </span>
                     )}
 
-                    {node.deadline && (
-                        <div className="flex items-center text-xs text-muted-foreground ml-2">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {format(new Date(node.deadline), "MMM d")}
-                        </div>
-                    )}
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <button
+                                className={cn(
+                                    "flex items-center text-xs text-muted-foreground ml-2 hover:text-foreground transition-colors",
+                                    !node.deadline && "opacity-0 group-hover:opacity-100"
+                                )}
+                            >
+                                <Calendar className="h-3 w-3 mr-1" />
+                                {node.deadline ? format(new Date(node.deadline), "MMM d") : "Set date"}
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                                mode="single"
+                                selected={node.deadline ? new Date(node.deadline) : undefined}
+                                onSelect={(date) => {
+                                    updateGoalMutation.mutate({
+                                        ...node,
+                                        deadline: date ? date.toISOString() : undefined
+                                    });
+                                }}
+                                initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
 
                     {node.progress > 0 && (
                         <div className="w-16 ml-2">

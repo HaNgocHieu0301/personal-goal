@@ -105,7 +105,7 @@ export function TaskCard({ task }: TaskCardProps) {
                     </div>
                 )}
 
-                <FocusTimer onSessionComplete={handleSessionComplete} />
+                <FocusTimer onSessionComplete={handleSessionComplete} task={task} />
             </CardContent>
 
             <CardFooter className="justify-center gap-4 pt-4">
@@ -144,10 +144,11 @@ function TargetSessionsConfig({ task }: { task: GoalNode }) {
         if (isNaN(val) || val < 0) return;
 
         let sessions = 0;
+        const effectiveDuration = task.focusDuration || focusDuration;
         if (currentMode === 'hours') {
             // Calculate sessions needed for this hours based on current focus duration settings
             const totalMinutesNeeded = val * 60;
-            sessions = Math.ceil(totalMinutesNeeded / focusDuration);
+            sessions = Math.ceil(totalMinutesNeeded / effectiveDuration);
         } else {
             sessions = Math.floor(val);
         }
@@ -158,9 +159,10 @@ function TargetSessionsConfig({ task }: { task: GoalNode }) {
         });
     };
 
+    const effectiveDuration = task.focusDuration || focusDuration;
     const parsedVal = parseFloat(inputValue);
     const calculatedSessions = !isNaN(parsedVal) && mode === 'hours'
-        ? Math.ceil((parsedVal * 60) / focusDuration)
+        ? Math.ceil((parsedVal * 60) / effectiveDuration)
         : Math.floor(parsedVal || 0);
 
     return (
@@ -184,7 +186,8 @@ function TargetSessionsConfig({ task }: { task: GoalNode }) {
                     onClick={() => {
                         setMode('hours');
                         // Calculate hours from current target sessions
-                        const hours = ((task.targetSessions || 0) * focusDuration) / 60;
+                        const effectiveDuration = task.focusDuration || focusDuration;
+                        const hours = ((task.targetSessions || 0) * effectiveDuration) / 60;
                         setInputValue(hours > 0 ? hours.toFixed(1) : "0");
                     }}
                 >
@@ -211,9 +214,37 @@ function TargetSessionsConfig({ task }: { task: GoalNode }) {
             {mode === 'hours' && calculatedSessions > 0 ? (
                 <p className="text-xs text-muted-foreground flex items-center gap-2 bg-muted p-2 rounded-md">
                     <Clock className="w-3 h-3" />
-                    Equals {calculatedSessions} sessions ({focusDuration}m each)
+                    Equals {calculatedSessions} sessions ({task.focusDuration || focusDuration}m each)
                 </p>
             ) : null}
+
+            <div className="pt-4 border-t space-y-3">
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="focus-duration-input" className="text-sm font-medium">Individual Focus Time</Label>
+                    <span className="text-[10px] text-muted-foreground uppercase font-mono">Scope: Task Only</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Input
+                        id="focus-duration-input"
+                        type="number"
+                        min={0}
+                        value={task.focusDuration || ""}
+                        onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            updateGoalMutation.mutate({
+                                ...task,
+                                focusDuration: isNaN(val) ? 0 : val
+                            });
+                        }}
+                        className="flex-1"
+                        placeholder={`${focusDuration} (default)`}
+                    />
+                    <span className="text-xs text-muted-foreground w-20">minutes</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground italic">
+                    If left empty or 0, the system will use the default setting ({focusDuration} min).
+                </p>
+            </div>
         </div>
     );
 }

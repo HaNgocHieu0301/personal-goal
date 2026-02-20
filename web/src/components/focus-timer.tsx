@@ -6,8 +6,11 @@ import { Play, Pause, Square } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useSettingsStore } from "@/stores/settings-store";
 
+import { GoalNode } from "@/types";
+
 interface FocusTimerProps {
     onSessionComplete?: () => void;
+    task?: GoalNode;
 }
 
 const playCompletionSound = () => {
@@ -38,21 +41,27 @@ const playCompletionSound = () => {
     }
 };
 
-export function FocusTimer({ onSessionComplete }: FocusTimerProps = {}) {
-    const { focusDuration } = useSettingsStore();
-    const [timeLeft, setTimeLeft] = useState(focusDuration * 60);
+export function FocusTimer({ onSessionComplete, task }: FocusTimerProps = {}) {
+    const { focusDuration: globalFocusDuration } = useSettingsStore();
+
+    // Effective duration: task-specific if set (>0), otherwise global
+    const effectiveDuration = (task?.focusDuration && task.focusDuration > 0)
+        ? task.focusDuration
+        : globalFocusDuration;
+
+    const [timeLeft, setTimeLeft] = useState(effectiveDuration * 60);
     const [isActive, setIsActive] = useState(false);
-    const prevDurationRef = useRef(focusDuration);
+    const prevDurationRef = useRef(effectiveDuration);
 
     // Update time left if settings change while not active
     useEffect(() => {
-        if (prevDurationRef.current !== focusDuration) {
-            prevDurationRef.current = focusDuration;
+        if (prevDurationRef.current !== effectiveDuration) {
+            prevDurationRef.current = effectiveDuration;
             if (!isActive) {
-                setTimeLeft(focusDuration * 60);
+                setTimeLeft(effectiveDuration * 60);
             }
         }
-    }, [focusDuration, isActive]);
+    }, [effectiveDuration, isActive]);
 
     useEffect(() => {
         let interval: NodeJS.Timeout | null = null;
@@ -75,18 +84,23 @@ export function FocusTimer({ onSessionComplete }: FocusTimerProps = {}) {
     const toggle = () => setIsActive(!isActive);
     const reset = () => {
         setIsActive(false);
-        setTimeLeft(focusDuration * 60);
+        setTimeLeft(effectiveDuration * 60);
     };
 
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
-    const progress = ((focusDuration * 60 - timeLeft) / (focusDuration * 60)) * 100;
+    const progress = ((effectiveDuration * 60 - timeLeft) / (effectiveDuration * 60)) * 100;
 
     return (
         <div className="flex flex-col items-center gap-4 w-full">
             <div className="text-6xl font-mono font-bold tracking-tighter">
                 {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
             </div>
+            {task?.focusDuration && task.focusDuration > 0 && (
+                <div className="text-[10px] uppercase tracking-widest text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full">
+                    Custom Goal Timer: {task.focusDuration}m
+                </div>
+            )}
             <Progress value={progress} className="h-2 w-full max-w-xs" />
             <div className="flex gap-4">
                 <Button size="lg" onClick={toggle} className={isActive ? "bg-amber-500 hover:bg-amber-600" : ""}>

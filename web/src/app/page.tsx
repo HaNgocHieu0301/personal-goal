@@ -4,19 +4,29 @@ import { useState, useEffect } from "react";
 
 import { GoalTree } from "@/components/goal-tree";
 import { TaskCard } from "@/components/task-card";
-import { useGoals } from "@/hooks/use-goals";
+import { Plus, X, Crosshair, LayoutDashboard, ListChecks, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Crosshair, LayoutDashboard, ListChecks, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { SettingsDialog } from "@/components/settings-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useGoals, useCreateGoal, useDeleteGoal, useToggleFocus } from "@/hooks/use-goals";
+import { GoalNode } from "@/types";
 
 export default function Home() {
   const { data: goals, isLoading, error } = useGoals();
 
   // State for active task selection in Warrior Mode
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+
+  // Quick task state for Warrior mode
+  const [isAddingQuickTask, setIsAddingQuickTask] = useState(false);
+  const [quickTaskTitle, setQuickTaskTitle] = useState("");
+  const createGoalMutation = useCreateGoal();
+  const deleteGoalMutation = useDeleteGoal();
+  const toggleFocusMutation = useToggleFocus();
 
   // Helper to find focused nodes recursively without duplicates
   const getFocusedNodes = (nodes: any[], seen = new Set<string>()): any[] => {
@@ -50,6 +60,32 @@ export default function Home() {
   }, [focusedTasks, activeTaskId]);
 
   const activeTask = focusedTasks.find(t => t.id === activeTaskId) || null;
+
+  const handleAddQuickTask = () => {
+    if (quickTaskTitle.trim()) {
+      createGoalMutation.mutate({
+        title: quickTaskTitle,
+        isFocus: true,
+        parentId: undefined,
+        targetPeriod: undefined
+      });
+      setQuickTaskTitle("");
+      setIsAddingQuickTask(false);
+    }
+  };
+
+  const handleRemoveTask = (e: React.MouseEvent, task: GoalNode) => {
+    e.stopPropagation();
+
+    // Daily task: no parent AND no target period
+    const isDailyTask = !task.parentId && !task.targetPeriod;
+
+    if (isDailyTask) {
+      deleteGoalMutation.mutate(task.id);
+    } else {
+      toggleFocusMutation.mutate(task.id);
+    }
+  };
 
   return (
     <main className="flex min-h-[100dvh] flex-col items-center p-4 md:p-8 bg-background text-foreground pb-24 md:pb-8 transition-colors">
@@ -131,10 +167,40 @@ export default function Home() {
                       <ListChecks className="mr-2 h-5 w-5 text-primary" />
                       Mission Queue
                     </h2>
-                    <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
-                      {focusedTasks.length}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+                        {focusedTasks.length}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 rounded-full hover:bg-primary/20 hover:text-primary transition-colors"
+                        onClick={() => setIsAddingQuickTask(true)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
+
+                  {isAddingQuickTask && (
+                    <div className="mb-4 animate-in slide-in-from-top-2 flex items-center gap-2">
+                      <Input
+                        autoFocus
+                        placeholder="Add daily task..."
+                        className="h-9 font-mono text-sm bg-card/50 border-primary/30"
+                        value={quickTaskTitle}
+                        onChange={(e) => setQuickTaskTitle(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleAddQuickTask();
+                          if (e.key === 'Escape') setIsAddingQuickTask(false);
+                        }}
+                        onBlur={() => {
+                          if (!quickTaskTitle.trim()) setIsAddingQuickTask(false);
+                          else handleAddQuickTask();
+                        }}
+                      />
+                    </div>
+                  )}
 
                   <ScrollArea className="h-[400px] w-full rounded-md border p-1 border-primary/20 bg-card/30">
                     <div className="space-y-2 p-1">
@@ -143,12 +209,20 @@ export default function Home() {
                           key={task.id}
                           onClick={() => setActiveTaskId(task.id)}
                           className={cn(
-                            "p-3 rounded-lg border cursor-pointer transition-all hover:bg-accent group",
+                            "p-3 rounded-lg border cursor-pointer transition-all hover:bg-accent group relative",
                             activeTaskId === task.id
                               ? "bg-accent border-primary ring-1 ring-primary/20 shadow-lg shadow-primary/5"
                               : "bg-card/50 border-border opacity-70 hover:opacity-100"
                           )}
                         >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => handleRemoveTask(e, task as GoalNode)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
                           <h3 className={cn(
                             "font-medium text-sm line-clamp-1 group-hover:text-primary transition-colors",
                             task.status === "done" && "line-through text-muted-foreground"

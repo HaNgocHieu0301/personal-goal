@@ -28,8 +28,9 @@ Dành cho trạng thái năng lượng cao, tập trung vào tư duy hệ thốn
 Dành cho trạng thái làm việc hàng ngày, tối giản hóa lựa chọn.
 
 * **The Big 3 View:** Dashboard chỉ hiển thị tối đa 3 việc quan trọng nhất phải hoàn thành trong ngày dựa trên độ ưu tiên và deadline.  
-* **Keyboard-Centric UI:** Toàn bộ thao tác (thêm task, đổi trạng thái, chuyển view) có thể thực hiện qua phím tắt để giảm "ma sát" khi tương tác.  
-* **Focus Mode:** Giao diện tối giản tuyệt đối khi đang thực hiện một task cụ thể.
+* **Warrior Mode Queue Management:** Hỗ trợ tạo nhanh các task daily độc lập và cơ chế Remove thông minh (Xóa task standalone hoặc bỏ focus task kiến trúc).
+* **Keyboard-Centric UI:** Toàn bộ thao tác (thêm task, đổi trạng thái, chuyển view) có thể thực hiện qua phím tắt (Tab, Enter, v.v.).  
+* **Focus Mode:** Giao diện tối giản tuyệt đối khi đang thực hiện một task cụ thể, hỗ trợ thiết lập thời gian tập trung (Focus Duration) riêng biệt cho từng task.
 
 ### **C. Cơ chế Kỷ luật & Hình phạt (Discipline & Penalty)**
 
@@ -44,9 +45,11 @@ Dành cho trạng thái làm việc hàng ngày, tối giản hóa lựa chọn.
 
 ### **4.1. Công thức tính tiến độ ($P$)**
 
-Tiến độ của một mục tiêu được tính bằng tổng tích lũy của trạng thái hoàn thành ($c$) và trọng số ($w$):  
-$$P \= \\frac{\\sum\_{i=1}^{n} (w\_i \\times c\_i)}{\\sum\_{i=1}^{n} w\_i} \\times 100\\%$$  
-*Trong đó:* $c\_i \= 1$ *nếu hoàn thành,* $0$ *nếu chưa.*
+Tiến độ của một mục tiêu được ưu tiên tính theo các cấp độ:
+1. **Ghi đè trạng thái:** Nếu `status = "done"`, $P = 100\%$.
+2. **Theo Session (nếu có):** $P = \frac{\text{completedSessions}}{\text{targetSessions}} \times 100\%$.
+3. **Theo Cây con (nếu có):** $P = \frac{\sum_{i=1}^{n} (w_i \times c_i)}{\sum_{i=1}^{n} w_i} \times 100\%$ (Trong đó $c_i=1$ nếu hoàn thành).
+4. **Thủ công:** Dựa trên giá trị `progress` nhập trực tiếp.
 
 ### **4.2. Chỉ số Momentum (Đà năng suất)**
 
@@ -107,6 +110,10 @@ Dựa trên yêu cầu về hiệu suất, khả năng mở rộng và định h
 * [x] **Focus Timer & Notifications**: Bộ đếm ngược tích hợp cấu hình số phút tập trung linh hoạt và âm thanh thông báo "Ding" bằng Web Audio API. 
 * [x] **Auto-Complete Sessions**: Tự động đánh dấu hoàn thành Task thông qua việc tích đủ số quãng tập trung đặt ra trước đó (với Smart Conversion giữa Total Time và Sessions).
 * [x] **Inline Calendar Deadline**: Tích hợp nhanh ngày hết hạn cho từng Task chuyên biệt trên cấu trúc cây.
+* [x] **Session-Based Progress**: Logic tính tập trung vào số phiên hoàn thành, ghi đè 100% khi Done thủ công.
+* [x] **Focus Duration Overrides**: Cho phép mỗi task có một thời gian tập trung riêng biệt (vượt qua cấu hình global).
+* [x] **Smart Queue Management**: Thêm nhanh task daily trong Warrior Mode; soft-delete hoặc untoggle focus khi remove.
+* [x] **Persistence Engine**: Tự động lưu trạng thái đóng/mở sidebar và các lựa chọn UI của người dùng.
 
 ### **Giai đoạn 2: Discipline Engine**
 

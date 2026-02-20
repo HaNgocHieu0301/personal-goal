@@ -18,6 +18,7 @@ type Goal struct {
 	IsFocus           bool           `gorm:"default:false" json:"isFocus"` // Identify critical tasks for Warrior Mode
 	TargetSessions    int            `gorm:"default:0" json:"targetSessions"`
 	CompletedSessions int            `gorm:"default:0" json:"completedSessions"`
+	FocusDuration     int            `gorm:"default:0" json:"focusDuration"`             // Individual focus duration in minutes
 	TargetPeriod      string         `gorm:"type:varchar(20);index" json:"targetPeriod"` // Format: YYYY-MM
 	Deadline          *time.Time     `json:"deadline"`
 	CreatedAt         time.Time      `json:"createdAt"`

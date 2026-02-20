@@ -7,14 +7,16 @@ import (
 )
 
 type Config struct {
-	AppPort    string `mapstructure:"PORT"`
-	DBHost     string `mapstructure:"DB_HOST"`
-	DBUser     string `mapstructure:"DB_USER"`
-	DBPassword string `mapstructure:"DB_PASSWORD"`
-	DBName     string `mapstructure:"DB_NAME"`
-	DBPort     string `mapstructure:"DB_PORT"`
-	RedisHost  string `mapstructure:"REDIS_HOST"`
-	RedisPort  string `mapstructure:"REDIS_PORT"`
+	AppPort          string `mapstructure:"PORT"`
+	DBHost           string `mapstructure:"DB_HOST"`
+	DBUser           string `mapstructure:"DB_USER"`
+	DBPassword       string `mapstructure:"DB_PASSWORD"`
+	DBName           string `mapstructure:"DB_NAME"`
+	DBPort           string `mapstructure:"DB_PORT"`
+	RedisHost        string `mapstructure:"REDIS_HOST"`
+	RedisPort        string `mapstructure:"REDIS_PORT"`
+	TelegramBotToken string `mapstructure:"TELEGRAM_BOT_TOKEN"`
+	TelegramChatID   string `mapstructure:"TELEGRAM_CHAT_ID"`
 }
 
 func LoadConfig() (Config, error) {
@@ -30,6 +32,8 @@ func LoadConfig() (Config, error) {
 	viper.BindEnv("DB_PORT")
 	viper.BindEnv("REDIS_HOST")
 	viper.BindEnv("REDIS_PORT")
+	viper.BindEnv("TELEGRAM_BOT_TOKEN")
+	viper.BindEnv("TELEGRAM_CHAT_ID")
 
 	// Default values
 	viper.SetDefault("PORT", "8080")

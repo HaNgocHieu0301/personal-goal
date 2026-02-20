@@ -8,6 +8,7 @@ import (
 	"github.com/HaNgocHieu0301/personal-goal/backend/internal/database"
 	"github.com/HaNgocHieu0301/personal-goal/backend/internal/handlers"
 	"github.com/HaNgocHieu0301/personal-goal/backend/internal/repository"
+	"github.com/HaNgocHieu0301/personal-goal/backend/internal/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -28,6 +29,16 @@ func main() {
 	// 3. Setup Repository & Handler
 	goalRepo := repository.NewGoalRepository(db)
 	goalHandler := handlers.NewGoalHandler(goalRepo)
+
+	disciplineRepo := repository.NewDisciplineRepository(db)
+	disciplineHandler := handlers.NewDisciplineHandler(disciplineRepo)
+
+	activityRepo := repository.NewActivityRepository(db)
+	activityHandler := handlers.NewActivityHandler(activityRepo)
+
+	// 3.5 Start Background Services
+	notificationService := services.NewNotificationService(db, cfg)
+	notificationService.StartCronJobs()
 
 	// 4. Setup Router
 	r := gin.Default()
@@ -56,6 +67,17 @@ func main() {
 			goals.PUT("/:id", goalHandler.UpdateGoal)
 			goals.DELETE("/:id", goalHandler.DeleteGoal)
 			goals.PATCH("/:id/focus", goalHandler.ToggleFocus)
+		}
+
+		discipline := api.Group("/discipline")
+		{
+			discipline.GET("/status", disciplineHandler.GetStatus)
+			discipline.POST("/resolve", disciplineHandler.Resolve)
+		}
+
+		activity := api.Group("/activity")
+		{
+			activity.GET("/heatmap", activityHandler.GetHeatmapData)
 		}
 	}
 

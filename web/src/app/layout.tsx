@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   description: "The Operating System for High Performers",
 };
 
+import { DisciplineProvider } from "@/components/discipline-provider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -36,7 +38,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Providers>
-            {children}
+            <DisciplineProvider>
+              {children}
+            </DisciplineProvider>
           </Providers>
         </ThemeProvider>
       </body>

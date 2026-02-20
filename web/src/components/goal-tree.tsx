@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { format, addMonths, subMonths } from "date-fns";
 import { YearlyCompass } from "@/components/yearly-compass";
+import { ActivityHeatmap } from "@/components/activity-heatmap";
 
 // Generate a list of periods for the sidebar
 const generatePeriods = () => {
@@ -200,6 +201,8 @@ export function GoalTree() {
 
             {/* Right Content Area: Goal Tree */}
             <div className="flex-1 space-y-4 border-l pl-0 md:pl-6 bg-background rounded-lg">
+                <ActivityHeatmap />
+
                 <div className="flex items-center justify-between mb-6 sticky top-0 bg-background/95 backdrop-blur z-10 pb-4 pt-2">
                     <div>
                         <h2 className="text-xl font-bold tracking-tight">Focus Goals</h2>

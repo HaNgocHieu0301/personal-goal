@@ -11,7 +11,10 @@ import {
     CheckCircle2,
     CircleDashed,
     Calendar,
-    Target
+    Target,
+    Zap,
+    Flame,
+    Coffee
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -48,8 +51,16 @@ export function GoalNodeItem({ node, level = 0 }: GoalNodeProps) {
     const [isAdding, setIsAdding] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isLinkOpen, setIsLinkOpen] = useState(false);
+    const [isPriorityOpen, setIsPriorityOpen] = useState(false);
     const [newGoalTitle, setNewGoalTitle] = useState("");
     const [editTitle, setEditTitle] = useState(node.title);
+
+    const getPriorityConfig = (weight: number) => {
+        if (weight <= 50) return { label: "Chill", icon: Coffee, color: "text-muted-foreground" };
+        if (weight === 100) return { label: "Standard", icon: Target, color: "text-primary" };
+        if (weight === 200) return { label: "High", icon: Flame, color: "text-orange-500" };
+        return { label: "Beast", icon: Zap, color: "text-red-500" };
+    };
 
     const linkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -259,6 +270,59 @@ export function GoalNodeItem({ node, level = 0 }: GoalNodeProps) {
                             </PopoverContent>
                         </Popover>
                     )}
+
+                    {/* PRIORITY SELECTOR */}
+                    <Popover open={isPriorityOpen} onOpenChange={setIsPriorityOpen}>
+                        <PopoverTrigger asChild>
+                            <button
+                                className={cn(
+                                    "flex items-center text-xs ml-2 transition-colors",
+                                    node.weight !== 100
+                                        ? getPriorityConfig(node.weight).color
+                                        : "text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-foreground"
+                                )}
+                                title="Set Priority"
+                            >
+                                {(() => {
+                                    const { icon: PriorityIcon, label } = getPriorityConfig(node.weight);
+                                    return (
+                                        <>
+                                            <PriorityIcon className="h-3 w-3 mr-1" />
+                                            {node.weight !== 100 ? label : "Priority"}
+                                        </>
+                                    );
+                                })()}
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-40 p-1" align="start">
+                            <div className="flex flex-col gap-1">
+                                {[
+                                    { weight: 50, label: "Chill", icon: Coffee, color: "text-muted-foreground" },
+                                    { weight: 100, label: "Standard", icon: Target, color: "text-primary" },
+                                    { weight: 200, label: "High", icon: Flame, color: "text-orange-500" },
+                                    { weight: 500, label: "Beast", icon: Zap, color: "text-red-500" },
+                                ].map(p => (
+                                    <Button
+                                        key={p.weight}
+                                        variant="ghost"
+                                        size="sm"
+                                        className={cn(
+                                            "justify-start h-8 text-xs font-medium",
+                                            node.weight === p.weight ? "bg-muted shadow-sm" : ""
+                                        )}
+                                        onClick={() => {
+                                            updateGoalMutation.mutate({ ...node, weight: p.weight });
+                                            setIsPriorityOpen(false);
+                                        }}
+                                    >
+                                        <p.icon className={cn("h-4 w-4 mr-2", p.color)} />
+                                        {p.label}
+                                        <span className="ml-auto text-[10px] opacity-50 font-mono">wt:{p.weight}</span>
+                                    </Button>
+                                ))}
+                            </div>
+                        </PopoverContent>
+                    </Popover>
 
                     {node.targetSessions && node.targetSessions > 0 ? (
                         <div className="flex items-center gap-2 ml-2">

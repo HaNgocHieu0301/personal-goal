@@ -26,7 +26,11 @@ func Connect(cfg config.Config) *gorm.DB {
 	log.Println("Details: Connected to Database")
 
 	// Auto Migrate the schema
-	err = db.AutoMigrate(&models.Goal{})
+	err = db.AutoMigrate(
+		&models.Goal{},
+		&models.ViolationLog{},
+		&models.ActivityLog{},
+	)
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}

@@ -16,6 +16,7 @@ export interface GoalNode {
     isFocus?: boolean; // Select for Warrior Mode (The Big 3)
     targetSessions?: number; // Number of sessions user needs to complete to auto-finish the goal
     completedSessions?: number; // Number of focus sessions completed for this task
+    targetPeriod?: string; // e.g. "2026-02"
 }
 
 export interface UserMetrics {

@@ -32,6 +32,49 @@ export function ActivityHeatmap() {
         staleTime: 1000 * 60 * 60, // 1 hour
     });
 
+    const { dataMap, maxScore } = useMemo(() => {
+        const map = new Map<string, HeatmapData>();
+        let max = 1;
+        data?.forEach((d: HeatmapData) => {
+            map.set(d.date.split("T")[0], d);
+            if (d.score > max) max = d.score;
+        });
+        return { dataMap: map, maxScore: max };
+    }, [data]);
+
+    const weeks = useMemo(() => {
+        const today = new Date();
+        const startDate = startOfYear(today);
+        const endDate = endOfYear(today);
+        const days = eachDayOfInterval({ start: startDate, end: endDate });
+
+        const wks: (Date | null)[][] = [];
+        let currentWeek: (Date | null)[] = [];
+
+        days.forEach((day: Date) => {
+            if (currentWeek.length === 0 && day.getDay() !== 0 && wks.length === 0) {
+                for (let i = 0; i < day.getDay(); i++) {
+                    currentWeek.push(null);
+                }
+            }
+
+            currentWeek.push(day);
+
+            if (day.getDay() === 6 || currentWeek.length === 7) {
+                wks.push(currentWeek);
+                currentWeek = [];
+            }
+        });
+
+        if (currentWeek.length > 0) {
+            while (currentWeek.length < 7) {
+                currentWeek.push(null);
+            }
+            wks.push(currentWeek);
+        }
+        return wks;
+    }, []);
+
     if (isPending) {
         return (
             <div className="flex items-center justify-center p-8 border rounded-xl bg-card">
@@ -44,15 +87,6 @@ export function ActivityHeatmap() {
         return null; // Don't show anything if there's an error
     }
 
-    const { dataMap, maxScore } = useMemo(() => {
-        const map = new Map<string, HeatmapData>();
-        let max = 1;
-        data?.forEach(d => {
-            map.set(d.date.split("T")[0], d);
-            if (d.score > max) max = d.score;
-        });
-        return { dataMap: map, maxScore: max };
-    }, [data]);
 
     const getLevel = (score: number) => {
         if (score === 0) return 0;
@@ -82,38 +116,6 @@ export function ActivityHeatmap() {
         return formatISO(date, { representation: 'date' }) === formatISO(today, { representation: 'date' });
     };
 
-    const weeks = useMemo(() => {
-        const today = new Date();
-        const startDate = startOfYear(today);
-        const endDate = endOfYear(today);
-        const days = eachDayOfInterval({ start: startDate, end: endDate });
-
-        const wks: (Date | null)[][] = [];
-        let currentWeek: (Date | null)[] = [];
-
-        days.forEach(day => {
-            if (currentWeek.length === 0 && day.getDay() !== 0 && wks.length === 0) {
-                for (let i = 0; i < day.getDay(); i++) {
-                    currentWeek.push(null);
-                }
-            }
-
-            currentWeek.push(day);
-
-            if (day.getDay() === 6 || currentWeek.length === 7) {
-                wks.push(currentWeek);
-                currentWeek = [];
-            }
-        });
-
-        if (currentWeek.length > 0) {
-            while (currentWeek.length < 7) {
-                currentWeek.push(null);
-            }
-            wks.push(currentWeek);
-        }
-        return wks;
-    }, []);
 
     return (
         <div className="w-full bg-gradient-to-br from-card to-card/50 border border-border/50 rounded-xl p-5 mb-8 shadow-sm group">

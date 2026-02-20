@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  personal-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-personal_goal}
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - personal_network
+
+  personal-redis:
+    image: redis:7-alpine
+    volumes:
+      - redisdata_prod:/data
+    restart: unless-stopped
+    networks:
+      - personal_network
+    # Not exposing any ports to host
+
+  personal-backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@personal-db:5432/${POSTGRES_DB:-personal_goal}?sslmode=disable
+      - REDIS_URL=redis://personal-redis:6379
+      - FRONTEND_URL=https://${DOMAIN:-app.domain.com}
+      - PORT=8080
+      - OS_TYPE=linux
+      - JWT_SECRET=${JWT_SECRET:-supersecret}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+    depends_on:
+      - personal-db
+      - personal-redis
+    restart: unless-stopped
+    networks:
+      - personal_network
+      - proxy_network
+
+  personal-frontend:
+    build: 
+      context: ./web
+      dockerfile: Dockerfile
+    environment:
+      - NEXT_PUBLIC_API_URL=/api/v1
+    depends_on:
+      - personal-backend
+    restart: unless-stopped
+    networks:
+      - personal_network
+      - proxy_network
+
+volumes:
+  pgdata_prod:
+  redisdata_prod:
+
+networks:
+  personal_network:
+    driver: bridge
+
+  proxy_network:
+    external: true
+    name: my-shared-net

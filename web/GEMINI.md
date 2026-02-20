@@ -103,12 +103,16 @@ Dựa trên yêu cầu về hiệu suất, khả năng mở rộng và định h
 * [x] Xây dựng Core Engine: Tạo và quản lý cây mục tiêu.  
 * [x] Implement logic tính % tiến độ dựa trên trọng số.  
 * [x] Dashboard "The Big 3".
+* [x] **Smart Sorting Logic**: Tự động xếp các thẻ Task (ưa tiên Trạng thái Done xuống dưới cùng, Undone ở nguyên vị trí cũ).
+* [x] **Focus Timer & Notifications**: Bộ đếm ngược tích hợp cấu hình số phút tập trung linh hoạt và âm thanh thông báo "Ding" bằng Web Audio API. 
+* [x] **Auto-Complete Sessions**: Tự động đánh dấu hoàn thành Task thông qua việc tích đủ số quãng tập trung đặt ra trước đó (với Smart Conversion giữa Total Time và Sessions).
+* [x] **Inline Calendar Deadline**: Tích hợp nhanh ngày hết hạn cho từng Task chuyên biệt trên cấu trúc cây.
 
 ### **Giai đoạn 2: Discipline Engine**
 
-* Tích hợp hệ thống Deadline và mức độ Kỷ luật.  
-* Phát triển luồng "Xác nhận nộp phạt" và Nhật ký thất bại.  
-* Heatmap theo dõi sự kiên trì (giống GitHub).
+* [ ] Tích hợp hệ thống mức độ Kỷ luật (Chill / Standard / Beast Mode).  
+* [ ] Phát triển luồng "Xác nhận nộp phạt" và Nhật ký thất bại.  
+* [ ] Heatmap theo dõi sự kiên trì (giống GitHub).
 
 ### **Giai đoạn 3: Optimization & Tools**
 

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Pause, Square } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useSettingsStore } from "@/stores/settings-store";
+import { cn } from "@/lib/utils";
 
 import { GoalNode } from "@/types";
 
@@ -44,7 +45,6 @@ const playCompletionSound = () => {
 export function FocusTimer({ onSessionComplete, task }: FocusTimerProps = {}) {
     const { focusDuration: globalFocusDuration } = useSettingsStore();
 
-    // Effective duration: task-specific if set (>0), otherwise global
     const effectiveDuration = (task?.focusDuration && task.focusDuration > 0)
         ? task.focusDuration
         : globalFocusDuration;
@@ -53,7 +53,6 @@ export function FocusTimer({ onSessionComplete, task }: FocusTimerProps = {}) {
     const [isActive, setIsActive] = useState(false);
     const prevDurationRef = useRef(effectiveDuration);
 
-    // Update time left if settings change while not active
     useEffect(() => {
         if (prevDurationRef.current !== effectiveDuration) {
             prevDurationRef.current = effectiveDuration;
@@ -89,28 +88,117 @@ export function FocusTimer({ onSessionComplete, task }: FocusTimerProps = {}) {
 
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
-    const progress = ((effectiveDuration * 60 - timeLeft) / (effectiveDuration * 60)) * 100;
+    const totalSeconds = effectiveDuration * 60;
+    const progress = ((totalSeconds - timeLeft) / totalSeconds) * 100;
+
+    // SVG Circle properties
+    const radius = 90;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (progress / 100) * circumference;
 
     return (
-        <div className="flex flex-col items-center gap-4 w-full">
-            <div className="text-6xl font-mono font-bold tracking-tighter">
-                {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
-            </div>
-            {task?.focusDuration && task.focusDuration > 0 && (
-                <div className="text-[10px] uppercase tracking-widest text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full">
-                    Custom Goal Timer: {task.focusDuration}m
+        <div className="flex flex-col items-center gap-6 w-full py-2">
+            {/* Immersive Circular Timer */}
+            <div className="relative flex items-center justify-center">
+                {/* Background Glow */}
+                <div className={cn(
+                    "absolute inset-0 rounded-full blur-2xl transition-all duration-1000",
+                    isActive ? "bg-primary/20 scale-110 opacity-100" : "bg-primary/5 scale-100 opacity-50"
+                )} />
+
+                <svg className="w-52 h-52 transform -rotate-90">
+                    {/* Background Ring */}
+                    <circle
+                        cx="104"
+                        cy="104"
+                        r={radius}
+                        stroke="currentColor"
+                        strokeWidth="6"
+                        fill="transparent"
+                        className="text-slate-200 dark:text-primary/10"
+                    />
+                    {/* Progress Ring */}
+                    <circle
+                        cx="104"
+                        cy="104"
+                        r={radius}
+                        stroke="currentColor"
+                        strokeWidth="6"
+                        strokeDasharray={circumference}
+                        style={{ strokeDashoffset, transition: "stroke-dashoffset 0.5s linear" }}
+                        strokeLinecap="round"
+                        fill="transparent"
+                        className={cn(
+                            "text-primary transition-all duration-500",
+                            isActive && "animate-pulse-subtle"
+                        )}
+                    />
+                </svg>
+
+                {/* Countdown Text */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className={cn(
+                        "text-6xl font-mono font-bold tracking-tighter transition-all duration-300",
+                        isActive ? "scale-105 text-primary" : "text-slate-900 dark:text-foreground/80"
+                    )}>
+                        {String(minutes).padStart(2, "0")}
+                        <span className={cn(isActive && "animate-pulse")}>:</span>
+                        {String(seconds).padStart(2, "0")}
+                    </div>
                 </div>
-            )}
-            <Progress value={progress} className="h-2 w-full max-w-xs" />
-            <div className="flex gap-4">
-                <Button size="lg" onClick={toggle} className={isActive ? "bg-amber-500 hover:bg-amber-600" : ""}>
-                    {isActive ? <Pause className="mr-2 h-5 w-5" /> : <Play className="mr-2 h-5 w-5" />}
-                    {isActive ? "Pause" : "Focus"}
-                </Button>
-                <Button size="icon" variant="outline" onClick={reset}>
-                    <Square className="h-4 w-4" />
-                </Button>
             </div>
+
+            {/* Task Info & Controls */}
+            <div className="flex flex-col items-center gap-6 w-full max-w-xs">
+                {task?.focusDuration && task.focusDuration > 0 && (
+                    <div className="text-[10px] uppercase tracking-[0.2em] text-primary/80 font-bold bg-primary/10 px-3 py-1 rounded-full border border-primary/20 backdrop-blur-sm">
+                        Custom Mission Duration: {task.focusDuration}m
+                    </div>
+                )}
+
+                <div className="flex items-center gap-4">
+                    <Button
+                        size="xl"
+                        onClick={toggle}
+                        className={cn(
+                            "w-40 h-14 text-lg font-bold transition-all shadow-xl",
+                            isActive
+                                ? "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20"
+                                : "bg-primary hover:bg-primary/90 shadow-primary/20"
+                        )}
+                    >
+                        {isActive ? (
+                            <>
+                                <Pause className="mr-3 h-6 w-6 fill-current" />
+                                PAUSE
+                            </>
+                        ) : (
+                            <>
+                                <Play className="mr-3 h-6 w-6 fill-current" />
+                                FOCUS
+                            </>
+                        )}
+                    </Button>
+                    <Button
+                        size="icon-xl"
+                        variant="outline"
+                        onClick={reset}
+                        className="border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all"
+                    >
+                        <Square className="h-6 w-6 fill-muted-foreground/20" />
+                    </Button>
+                </div>
+            </div>
+
+            <style jsx global>{`
+                @keyframes pulse-subtle {
+                    0%, 100% { opacity: 1; stroke-width: 8; }
+                    50% { opacity: 0.8; stroke-width: 9; }
+                }
+                .animate-pulse-subtle {
+                    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+                }
+            `}</style>
         </div>
     );
 }

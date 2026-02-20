@@ -42,26 +42,35 @@ export function TaskCard({ task }: TaskCardProps) {
     };
 
     return (
-        <Card className="w-full max-w-md border-primary/20 bg-card/50 backdrop-blur">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <Badge variant={task.status === "in-progress" ? "default" : "secondary"}>
-                    {task.status}
-                </Badge>
-                <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground font-mono">
-                        Weight: {task.weight}
+        <Card className="w-full max-w-lg mx-auto border-slate-200/60 dark:border-primary/20 bg-white/80 dark:bg-neutral-900/40 backdrop-blur-xl shadow-2xl dark:shadow-primary/5 relative overflow-hidden group">
+            {/* Subtle light effect */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-primary/20 blur pointer-events-none" />
+
+            <CardHeader className="flex flex-row items-center justify-between pb-0 pt-4 px-6 relative z-10">
+                <div className="flex items-center gap-3">
+                    <Badge variant={task.status === "in-progress" ? "default" : "secondary"} className="uppercase tracking-widest text-[9px] h-4">
+                        {task.status}
+                    </Badge>
+                    <span className="text-[9px] text-muted-foreground font-mono uppercase tracking-widest">
+                        Node: {task.id.slice(0, 8)}
                     </span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="flex flex-col items-end mr-1">
+                        <span className="text-[9px] text-muted-foreground uppercase tracking-widest leading-none">Weight</span>
+                        <span className="text-xs font-bold font-mono">{task.weight}</span>
+                    </div>
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full text-muted-foreground hover:text-foreground">
+                            <Button variant="outline" size="xs" className="h-6 w-6 p-0 rounded-md border-primary/10 hover:border-primary/30 transition-all">
                                 <Edit2 className="h-3 w-3" />
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-80" align="end">
                             <div className="space-y-4">
-                                <h4 className="font-medium leading-none">Auto-Complete Target</h4>
-                                <p className="text-sm text-muted-foreground">
-                                    Configure auto-completion for this mission. Setting 0 disables it.
+                                <h4 className="font-medium leading-none">Task Configuration</h4>
+                                <p className="text-sm text-muted-foreground italic">
+                                    Define sessions or time targets for auto-completion.
                                 </p>
                                 <TargetSessionsConfig task={task} />
                             </div>
@@ -70,62 +79,81 @@ export function TaskCard({ task }: TaskCardProps) {
                 </div>
             </CardHeader>
 
-            <CardContent className="space-y-6">
-                <div className="space-y-2 text-center">
-                    <CardTitle className="text-2xl font-bold tracking-tight">
+            <CardContent className="space-y-6 pt-4 pb-6 px-6 relative z-10">
+                {/* Title & Description Block */}
+                <div className="space-y-3 text-center">
+                    <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter bg-gradient-to-b from-foreground to-foreground/60 bg-clip-text text-transparent">
                         {task.title}
                     </CardTitle>
                     {task.description && (
-                        <p className="text-muted-foreground text-sm">
+                        <p className="text-muted-foreground text-sm max-w-sm mx-auto leading-relaxed italic border-l-2 border-primary/20 pl-4 py-0.5">
                             {task.description}
                         </p>
                     )}
                     {task.deadline && (
-                        <div className="flex items-center justify-center text-sm text-muted-foreground">
-                            <Calendar className="h-4 w-4 mr-2" />
-                            <span>Due: {format(new Date(task.deadline), "MMMM d, yyyy")}</span>
+                        <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-mono text-primary/80">
+                            <Calendar className="h-3 w-3 mr-1.5" />
+                            <span>TERMINAL: {format(new Date(task.deadline), "yyyy.MM.dd")}</span>
                         </div>
                     )}
                 </div>
 
+                {/* Session Progress Indicators */}
                 {targetSessions > 0 && (
-                    <div className="flex justify-center gap-1.5 mt-2 mb-4">
-                        {Array.from({ length: targetSessions }).map((_, i) => (
-                            <div
-                                key={i}
-                                className={cn(
-                                    "w-3 h-3 rounded-full transition-colors",
-                                    i < (task.completedSessions || 0)
-                                        ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"
-                                        : "bg-primary/10"
-                                )}
-                                title={`Session ${i + 1}`}
-                            />
-                        ))}
+                    <div className="flex flex-col items-center gap-2">
+                        <div className="flex flex-wrap justify-center gap-1.5">
+                            {Array.from({ length: targetSessions }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className={cn(
+                                        "w-1.5 h-1.5 rounded-full transition-all duration-500",
+                                        i < (task.completedSessions || 0)
+                                            ? "bg-primary shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+                                            : "bg-slate-200 dark:bg-neutral-800 border border-slate-300 dark:border-neutral-700/50"
+                                    )}
+                                />
+                            ))}
+                        </div>
+                        <span className="text-[9px] font-bold font-mono text-primary/40 uppercase tracking-widest">
+                            {task.completedSessions || 0} / {targetSessions} Sessions
+                        </span>
                     </div>
                 )}
 
+                {/* The Improved Timer Component */}
                 <FocusTimer onSessionComplete={handleSessionComplete} task={task} />
             </CardContent>
 
-            <CardFooter className="justify-center gap-4 pt-4">
+            <CardFooter className="px-6 pb-6 pt-0 relative z-10">
                 <Button
                     variant="outline"
                     onClick={handleComplete}
                     disabled={updateGoalMutation.isPending || task.status === "done"}
-                    className="w-full hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
+                    className={cn(
+                        "w-full rounded-xl border-slate-200 dark:border-primary/20 h-12 text-sm font-bold group/btn relative overflow-hidden transition-all shadow-sm dark:shadow-lg",
+                        task.status === "done"
+                            ? "bg-green-500/10 text-green-500 border-green-500/30"
+                            : "hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary hover:border-primary/40 active:scale-95 hover:shadow-primary/5"
+                    )}
                 >
                     {updateGoalMutation.isPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                    ) : task.status === "done" ? (
+                        <CheckCircle2 className="mr-3 h-5 w-5 animate-bounce" />
                     ) : (
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        <CheckCircle2 className="mr-3 h-5 w-5 transition-transform group-hover/btn:scale-110" />
                     )}
-                    {task.status === "done" ? "Completed" : "Mark Complete"}
+                    {task.status === "done" ? "MISSION ACCOMPLISHED" : "COMPLETE MISSION"}
                 </Button>
             </CardFooter>
+
+            {/* Corner decorations for OS feel */}
+            <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-slate-200 dark:border-primary/20 rounded-tr-xl" />
+            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-slate-200 dark:border-primary/20 rounded-bl-xl" />
         </Card>
     );
 }
+
 
 function TargetSessionsConfig({ task }: { task: GoalNode }) {
     const updateGoalMutation = useUpdateGoal();

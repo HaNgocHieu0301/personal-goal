@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   personal-db:
+    container_name: personal-db
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -14,6 +15,7 @@ services:
       - personal_network
 
   personal-redis:
+    container_name: personal-redis
     image: redis:7-alpine
     volumes:
       - redisdata_prod:/data
@@ -23,6 +25,7 @@ services:
     # Not exposing any ports to host
 
   personal-backend:
+    container_name: personal-backend
     build: 
       context: ./backend
       dockerfile: Dockerfile
@@ -44,6 +47,7 @@ services:
       - proxy_network
 
   personal-frontend:
+    container_name: personal-frontend
     build: 
       context: ./web
       dockerfile: Dockerfile

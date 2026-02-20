@@ -9,7 +9,7 @@ git pull origin main
 
 # Build and start services in detached mode using the production compose file
 echo "🏗️ Building and starting containers..."
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build
 
 echo "🧹 Cleaning up old unused images..."
 docker image prune -f

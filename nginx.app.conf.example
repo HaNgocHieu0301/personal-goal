@@ -8,6 +8,8 @@ server {
 
     # Chuyển hướng tự động từ HTTP sang HTTPS (nếu đã có SSL)
     # location / { return 301 https://$host$request_uri; }
+    # Use Docker internal DNS to avoid Nginx crashing if containers are temporarily down
+    resolver 127.0.0.11 valid=30s;
     
     # Gzip Compression
     gzip on;
@@ -17,7 +19,8 @@ server {
 
     # Frontend (Next.js)
     location / {
-        proxy_pass http://personal-frontend:3000; # Tên container nội bộ thay vì localhost
+        set $frontend http://personal-frontend:3000;
+        proxy_pass $frontend; # Tên container nội bộ thay vì localhost
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -31,8 +34,9 @@ server {
     }
 
     # Backend API (Golang)
-    location /api/ {
-        proxy_pass http://personal-backend:8080/api/; # Tên container nội bộ thay vì localhost
+    location ^~ /api/ {
+        set $backend http://personal-backend:8080;
+        proxy_pass $backend/api/; # Tên container nội bộ thay vì localhost
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';

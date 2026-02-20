@@ -1,118 +1,37 @@
 import { create } from "zustand";
-import { INITIAL_GOALS, INITIAL_METRICS } from "@/lib/mock-data";
-import { GoalNode, UserMetrics } from "@/types";
+import { INITIAL_METRICS } from "@/lib/mock-data";
+import { UserMetrics } from "@/types";
 
-interface GoalState {
-    goals: GoalNode[];
+interface GoalUiState {
+    expandedNodeIds: Set<string>;
     metrics: UserMetrics;
     toggleExpand: (id: string) => void;
-    updateStatus: (id: string, status: GoalNode["status"]) => void;
-    deleteGoal: (id: string) => void;
-    addGoal: (parentId: string | null, title: string) => void;
-    toggleFocus: (id: string) => void;
+    setExpanded: (id: string, expanded: boolean) => void;
 }
 
-// Helper to recursively update a node
-const updateNodeById = (
-    nodes: GoalNode[],
-    id: string,
-    updateFn: (node: GoalNode) => GoalNode
-): GoalNode[] => {
-    return nodes.map((node) => {
-        if (node.id === id) {
-            return updateFn(node);
-        }
-        if (node.children.length > 0) {
-            return { ...node, children: updateNodeById(node.children, id, updateFn) };
-        }
-        return node;
-    });
-};
-
-// Helper to delete a node
-const deleteNodeById = (nodes: GoalNode[], id: string): GoalNode[] => {
-    return nodes
-        .filter((node) => node.id !== id)
-        .map((node) => ({
-            ...node,
-            children: deleteNodeById(node.children, id),
-        }));
-};
-
-// Helper to find and add child
-const addChildToNode = (
-    nodes: GoalNode[],
-    parentId: string,
-    newGoal: GoalNode
-): GoalNode[] => {
-    return nodes.map((node) => {
-        if (node.id === parentId) {
-            return {
-                ...node,
-                children: [...node.children, newGoal],
-                isExpanded: true, // Auto expand parent
-            };
-        }
-        if (node.children.length > 0) {
-            return {
-                ...node,
-                children: addChildToNode(node.children, parentId, newGoal),
-            };
-        }
-        return node;
-    });
-};
-
-export const useGoalStore = create<GoalState>((set) => ({
-    goals: INITIAL_GOALS,
+export const useGoalStore = create<GoalUiState>((set) => ({
+    expandedNodeIds: new Set<string>(),
     metrics: INITIAL_METRICS,
 
     toggleExpand: (id: string) =>
-        set((state) => ({
-            goals: updateNodeById(state.goals, id, (node) => ({
-                ...node,
-                isExpanded: !node.isExpanded,
-            })),
-        })),
-
-    updateStatus: (id: string, status: GoalNode["status"]) =>
-        set((state) => ({
-            goals: updateNodeById(state.goals, id, (node) => ({ ...node, status })),
-        })),
-
-    deleteGoal: (id: string) =>
-        set((state) => ({
-            goals: deleteNodeById(state.goals, id),
-        })),
-
-    addGoal: (parentId: string | null, title: string) =>
         set((state) => {
-            const newGoal: GoalNode = {
-                id: crypto.randomUUID(),
-                title,
-                status: "todo",
-                progress: 0,
-                weight: 10,
-                children: [],
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                isExpanded: true,
-                parentId,
-            };
-
-            if (!parentId) {
-                return { goals: [...state.goals, newGoal] };
+            const next = new Set(state.expandedNodeIds);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
             }
-
-            return {
-                goals: addChildToNode(state.goals, parentId, newGoal),
-            };
+            return { expandedNodeIds: next };
         }),
-    toggleFocus: (id) =>
-        set((state) => ({
-            goals: updateNodeById(state.goals, id, (node) => ({
-                ...node,
-                isFocus: !node.isFocus,
-            })),
-        })),
+
+    setExpanded: (id: string, expanded: boolean) =>
+        set((state) => {
+            const next = new Set(state.expandedNodeIds);
+            if (expanded) {
+                next.add(id);
+            } else {
+                next.delete(id);
+            }
+            return { expandedNodeIds: next };
+        }),
 }));

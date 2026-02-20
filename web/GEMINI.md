@@ -98,11 +98,11 @@ Dựa trên yêu cầu về hiệu suất, khả năng mở rộng và định h
 
 ## **7\. LỘ TRÌNH TRIỂN KHAI (Roadmap)**
 
-### **Giai đoạn 1: Minimal Viable Product (MVP)**
+### **Giai đoạn 1: Minimal Viable Product (MVP) - [COMPLETED]**
 
-* Xây dựng Core Engine: Tạo và quản lý cây mục tiêu.  
-* Implement logic tính % tiến độ dựa trên trọng số.  
-* Dashboard "The Big 3".
+* [x] Xây dựng Core Engine: Tạo và quản lý cây mục tiêu.  
+* [x] Implement logic tính % tiến độ dựa trên trọng số.  
+* [x] Dashboard "The Big 3".
 
 ### **Giai đoạn 2: Discipline Engine**
 

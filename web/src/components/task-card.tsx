@@ -5,17 +5,20 @@ import { FocusTimer } from "./focus-timer";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { CheckCircle2, ArrowRight, Calendar } from "lucide-react";
-import { useGoalStore } from "@/stores/goal-store";
 import { format } from "date-fns";
+import { Loader2, CheckCircle2, Calendar } from "lucide-react";
+import { useUpdateGoal } from "@/hooks/use-goals";
 
 interface TaskCardProps {
     task: GoalNode;
 }
 
 export function TaskCard({ task }: TaskCardProps) {
-    const { updateStatus } = useGoalStore();
-    console.log("TaskCard task:", task); // Debugging deadline
+    const updateGoalMutation = useUpdateGoal();
+
+    const handleComplete = () => {
+        updateGoalMutation.mutate({ ...task, status: "done", progress: 100 });
+    };
 
     return (
         <Card className="w-full max-w-md border-primary/20 bg-card/50 backdrop-blur">
@@ -52,11 +55,16 @@ export function TaskCard({ task }: TaskCardProps) {
             <CardFooter className="justify-center gap-4 pt-4">
                 <Button
                     variant="outline"
-                    onClick={() => updateStatus(task.id, "done")}
+                    onClick={handleComplete}
+                    disabled={updateGoalMutation.isPending || task.status === "done"}
                     className="w-full hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
                 >
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Mark Complete
+                    {updateGoalMutation.isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                    )}
+                    {task.status === "done" ? "Completed" : "Mark Complete"}
                 </Button>
             </CardFooter>
         </Card>

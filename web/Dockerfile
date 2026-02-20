@@ -9,6 +9,10 @@ RUN npm ci
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Nhận biến môi trường tại Build time
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Tạo biến môi trường bỏ qua Next.js Root lú lẫn
 ENV NEXT_PRIVATE_STANDALONE true
 RUN npm run build

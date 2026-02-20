@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { DisciplineOverlay } from "./discipline-overlay";
 import { useEffect, useState } from "react";
+import { api } from "@/hooks/use-goals";
 
 export function DisciplineProvider({ children }: { children: React.ReactNode }) {
     const [mounted, setMounted] = useState(false);
@@ -14,9 +15,8 @@ export function DisciplineProvider({ children }: { children: React.ReactNode }) 
     const { data } = useQuery({
         queryKey: ["discipline-status"],
         queryFn: async () => {
-            const res = await fetch("http://localhost:8080/api/v1/discipline/status");
-            if (!res.ok) throw new Error("Failed to fetch discipline status");
-            return res.json();
+            const { data } = await api.get("/discipline/status");
+            return data;
         },
         refetchInterval: 60000, // Check every minute
         refetchOnWindowFocus: true,

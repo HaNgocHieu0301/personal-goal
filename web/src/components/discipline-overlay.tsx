@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { api } from "@/hooks/use-goals";
 
 const REQUIRED_TEXT = "Tôi xác nhận đã nộp phạt vào quỹ tự phạt và cam kết sẽ kỷ luật hơn.";
 
@@ -18,26 +19,18 @@ export function DisciplineOverlay({ violationId }: { violationId: string }) {
 
     const resolveMutation = useMutation({
         mutationFn: async () => {
-            const res = await fetch("http://localhost:8080/api/v1/discipline/resolve", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    id: violationId,
-                    reason,
-                    commitmentText: REQUIRED_TEXT // Backend validates this exact string
-                }),
+            const { data } = await api.post("/discipline/resolve", {
+                id: violationId,
+                reason,
+                commitmentText: REQUIRED_TEXT // Backend validates this exact string
             });
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.error || "Failed to resolve violation");
-            }
-            return res.json();
+            return data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["discipline-status"] });
         },
         onError: (err: any) => {
-            setError(err.message);
+            setError(err?.response?.data?.error || err.message || "Đã xảy ra lỗi hệ thống. Vui lòng thử lại.");
         }
     });
 

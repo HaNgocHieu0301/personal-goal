@@ -4,7 +4,7 @@
 
 server {
     listen 80;
-    server_name app.mygoalos.com; # Thay bằng domain thật của bạn
+    server_name goal.hieuhn0301.id.vn; # Đã thay bằng domain thật của bạn
 
     # Chuyển hướng tự động từ HTTP sang HTTPS (nếu đã có SSL)
     # location / { return 301 https://$host$request_uri; }

@@ -15,6 +15,7 @@ type Config struct {
 	DBPort           string `mapstructure:"DB_PORT"`
 	RedisHost        string `mapstructure:"REDIS_HOST"`
 	RedisPort        string `mapstructure:"REDIS_PORT"`
+	FrontendURL      string `mapstructure:"FRONTEND_URL"`
 	TelegramBotToken string `mapstructure:"TELEGRAM_BOT_TOKEN"`
 	TelegramChatID   string `mapstructure:"TELEGRAM_CHAT_ID"`
 }
@@ -32,6 +33,7 @@ func LoadConfig() (Config, error) {
 	viper.BindEnv("DB_PORT")
 	viper.BindEnv("REDIS_HOST")
 	viper.BindEnv("REDIS_PORT")
+	viper.BindEnv("FRONTEND_URL")
 	viper.BindEnv("TELEGRAM_BOT_TOKEN")
 	viper.BindEnv("TELEGRAM_CHAT_ID")
 
@@ -39,6 +41,7 @@ func LoadConfig() (Config, error) {
 	viper.SetDefault("PORT", "8080")
 	viper.SetDefault("DB_HOST", "localhost")
 	viper.SetDefault("DB_PORT", "5432")
+	viper.SetDefault("FRONTEND_URL", "http://localhost:3000")
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Println("No .env file found, using environment variables")

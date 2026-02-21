@@ -4,7 +4,7 @@
 
 server {
     listen 80;
-    server_name goal.hieuhn0301.id.vn; # Đã thay bằng domain thật của bạn
+    server_name app.domain.com; # Đã thay bằng domain thật của bạn
 
     # Chuyển hướng tự động từ HTTP sang HTTPS (nếu đã có SSL)
     # location / { return 301 https://$host$request_uri; }
@@ -36,7 +36,7 @@ server {
     # Backend API (Golang)
     location ^~ /api/ {
         set $backend http://personal-backend:8080;
-        proxy_pass $backend/api/; # Tên container nội bộ thay vì localhost
+        proxy_pass $backend; # MUST NOT append /api/ here when using variables
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';

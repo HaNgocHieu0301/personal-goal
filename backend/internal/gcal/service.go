@@ -63,6 +63,15 @@ func NewGoogleCalendarService(cfg config.Config) (GoogleCalendarService, error) 
 }
 
 func (s *googleCalendarService) CreateAllDayEvent(title string, date time.Time) (string, error) {
+	// Ensure the date is in the correct local timezone (Asia/Ho_Chi_Minh or System Local)
+	// Because frontend sends UTC string like 2026-02-24T17:00:00Z which is Feb 25 00:00:00 locally
+	loc, err := time.LoadLocation("Asia/Ho_Chi_Minh")
+	if err == nil {
+		date = date.In(loc)
+	} else {
+		date = date.Local()
+	}
+
 	// Format as YYYY-MM-DD
 	dateStr := date.Format("2006-01-02")
 
@@ -85,7 +94,7 @@ func (s *googleCalendarService) CreateAllDayEvent(title string, date time.Time) 
 		s.calendarID = "primary"
 	}
 
-	event, err := s.client.Events.Insert(s.calendarID, event).Do()
+	event, err = s.client.Events.Insert(s.calendarID, event).Do()
 	if err != nil {
 		return "", fmt.Errorf("unable to create event: %w", err)
 	}
@@ -94,24 +103,29 @@ func (s *googleCalendarService) CreateAllDayEvent(title string, date time.Time) 
 }
 
 func (s *googleCalendarService) UpdateAllDayEvent(eventId string, title string, date time.Time) error {
+	// Ensure the date is in the correct local timezone (Asia/Ho_Chi_Minh or System Local)
+	loc, err := time.LoadLocation("Asia/Ho_Chi_Minh")
+	if err == nil {
+		date = date.In(loc)
+	} else {
+		date = date.Local()
+	}
+
 	dateStr := date.Format("2006-01-02")
 	endDate := date.AddDate(0, 0, 1)
 	endDateStr := endDate.Format("2006-01-02")
 
-	// Get existing event
-	event, err := s.client.Events.Get(s.calendarID, eventId).Do()
-	if err != nil {
-		return fmt.Errorf("unable to get event to update: %w", err)
+	event := &calendar.Event{
+		Summary: title,
+		Start: &calendar.EventDateTime{
+			Date: dateStr,
+		},
+		End: &calendar.EventDateTime{
+			Date: endDateStr,
+		},
 	}
 
-	// Update fields
-	event.Summary = title
-	event.Start = &calendar.EventDateTime{Date: dateStr}
-	event.End = &calendar.EventDateTime{Date: endDateStr}
-	event.Start.DateTime = "" // Clear these just in case they were set
-	event.End.DateTime = ""
-
-	_, err = s.client.Events.Update(s.calendarID, event.Id, event).Do()
+	_, err = s.client.Events.Patch(s.calendarID, eventId, event).Do()
 	if err != nil {
 		return fmt.Errorf("unable to update event: %w", err)
 	}

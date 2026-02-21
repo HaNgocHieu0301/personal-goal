@@ -3,11 +3,14 @@
 import { GoalNode } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Target, Layers, ArrowRight, CheckCircle2, CircleDashed } from "lucide-react";
+import { Target, Layers, ArrowRight, CheckCircle2, CircleDashed, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useDeleteGoal, useUpdateGoal } from "@/hooks/use-goals";
+import { Input } from "@/components/ui/input";
 
 interface YearlyCompassProps {
     goals: GoalNode[];
@@ -15,11 +18,46 @@ interface YearlyCompassProps {
 }
 
 export function YearlyCompass({ goals, year }: YearlyCompassProps) {
+    const updateGoalMutation = useUpdateGoal();
+    const deleteGoalMutation = useDeleteGoal();
+
     // Filter only top-level goals that belong to this year
     const yearlyGoals = goals.filter(goal => goal.targetPeriod === year && !goal.parentId);
     const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editTitle, setEditTitle] = useState("");
 
     const activeGoal = yearlyGoals.find(g => g.id === selectedGoalId);
+
+    const handleEditStart = (e: React.MouseEvent, goal: GoalNode) => {
+        e.stopPropagation();
+        setEditingId(goal.id);
+        setEditTitle(goal.title);
+    };
+
+    const handleEditSave = (goal: GoalNode) => {
+        if (editTitle.trim() && editTitle !== goal.title) {
+            updateGoalMutation.mutate({
+                ...goal,
+                title: editTitle.trim(),
+            });
+        }
+        setEditingId(null);
+    };
+
+    const handleDelete = async (e: React.MouseEvent, goal: GoalNode) => {
+        e.stopPropagation();
+        if (confirm("Are you sure you want to delete this yearly goal? All sub-goals will be unlinked but not deleted.")) {
+            if (goal.children && goal.children.length > 0) {
+                // Unlink all children
+                const promises = goal.children.map(child =>
+                    updateGoalMutation.mutateAsync({ ...child, parentId: null })
+                );
+                await Promise.all(promises);
+            }
+            deleteGoalMutation.mutate(goal.id);
+        }
+    };
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -48,16 +86,49 @@ export function YearlyCompass({ goals, year }: YearlyCompassProps) {
                             {/* Decorative background blur */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-10 -mt-10 transition-colors group-hover:bg-primary/10" />
 
-                            <CardHeader className="pb-4">
-                                <div className="flex items-start justify-between">
+                            <CardHeader className="pb-4 relative">
+                                <div className="flex items-start justify-between z-10 relative">
                                     <div className="p-2 bg-primary/10 rounded-lg">
                                         <Target className="w-5 h-5 text-primary" />
                                     </div>
-                                    <span className="text-xs font-mono px-2 py-1 bg-muted rounded-full text-muted-foreground">
-                                        {displayProgress}%
-                                    </span>
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-xs font-mono px-2 py-1 bg-muted rounded-full text-muted-foreground mr-1">
+                                            {displayProgress}%
+                                        </span>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={(e) => handleEditStart(e, goal)}>
+                                                    <Pencil className="mr-2 h-4 w-4" />
+                                                    <span>Edit</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => handleDelete(e, goal)}>
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    <span>Delete</span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
                                 </div>
-                                <CardTitle className="mt-4 text-xl line-clamp-2">{goal.title}</CardTitle>
+                                {editingId === goal.id ? (
+                                    <Input
+                                        value={editTitle}
+                                        onChange={(e) => setEditTitle(e.target.value)}
+                                        onBlur={() => handleEditSave(goal)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") handleEditSave(goal);
+                                            if (e.key === "Escape") setEditingId(null);
+                                        }}
+                                        autoFocus
+                                        className="mt-4 font-semibold text-xl h-auto py-1 px-0 border-none bg-transparent focus-visible:ring-1 focus-visible:ring-primary shadow-none"
+                                    />
+                                ) : (
+                                    <CardTitle className="mt-4 text-xl line-clamp-2">{goal.title}</CardTitle>
+                                )}
                                 {goal.description && (
                                     <CardDescription className="line-clamp-2 mt-1">
                                         {goal.description}

@@ -89,6 +89,11 @@ export function GoalTree() {
 
     // Filter top-level goals by selected period
     const filteredGoalList = goalList.filter(goal => {
+        // Exclude daily tasks (no targetPeriod and no parentId) from Architect Mode
+        if (!goal.targetPeriod && !goal.parentId) {
+            return false;
+        }
+
         // If it has a targetPeriod, match it. Otherwise, fallback to createdAt
         if (goal.targetPeriod) {
             return goal.targetPeriod === selectedPeriod;

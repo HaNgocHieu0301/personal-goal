@@ -21,6 +21,7 @@ type Goal struct {
 	FocusDuration     int            `gorm:"default:0" json:"focusDuration"`             // Individual focus duration in minutes
 	TargetPeriod      string         `gorm:"type:varchar(20);index" json:"targetPeriod"` // Format: YYYY-MM
 	Deadline          *time.Time     `json:"deadline"`
+	GoogleEventID     string         `gorm:"type:varchar(255)" json:"googleEventId,omitempty"` // ID of the event in Google Calendar
 	CreatedAt         time.Time      `json:"createdAt"`
 	UpdatedAt         time.Time      `json:"updatedAt"`
 	DeletedAt         gorm.DeletedAt `gorm:"index" json:"-"`

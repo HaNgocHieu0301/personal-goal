@@ -6,6 +6,7 @@ import (
 
 	"github.com/HaNgocHieu0301/personal-goal/backend/internal/config"
 	"github.com/HaNgocHieu0301/personal-goal/backend/internal/database"
+	"github.com/HaNgocHieu0301/personal-goal/backend/internal/gcal"
 	"github.com/HaNgocHieu0301/personal-goal/backend/internal/handlers"
 	"github.com/HaNgocHieu0301/personal-goal/backend/internal/repository"
 	"github.com/HaNgocHieu0301/personal-goal/backend/internal/services"
@@ -26,9 +27,15 @@ func main() {
 		log.Fatal("Failed to connect to database")
 	}
 
+	// 2.5 Initialize Google Calendar Service
+	gcalService, err := gcal.NewGoogleCalendarService(cfg)
+	if err != nil {
+		log.Printf("Failed to initialize Google Calendar service: %v", err)
+	}
+
 	// 3. Setup Repository & Handler
 	goalRepo := repository.NewGoalRepository(db)
-	goalHandler := handlers.NewGoalHandler(goalRepo)
+	goalHandler := handlers.NewGoalHandler(goalRepo, gcalService)
 
 	disciplineRepo := repository.NewDisciplineRepository(db)
 	disciplineHandler := handlers.NewDisciplineHandler(disciplineRepo)

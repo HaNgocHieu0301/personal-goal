@@ -7,17 +7,21 @@ import (
 )
 
 type Config struct {
-	AppPort          string `mapstructure:"PORT"`
-	DBHost           string `mapstructure:"DB_HOST"`
-	DBUser           string `mapstructure:"DB_USER"`
-	DBPassword       string `mapstructure:"DB_PASSWORD"`
-	DBName           string `mapstructure:"DB_NAME"`
-	DBPort           string `mapstructure:"DB_PORT"`
-	RedisHost        string `mapstructure:"REDIS_HOST"`
-	RedisPort        string `mapstructure:"REDIS_PORT"`
-	FrontendURL      string `mapstructure:"FRONTEND_URL"`
-	TelegramBotToken string `mapstructure:"TELEGRAM_BOT_TOKEN"`
-	TelegramChatID   string `mapstructure:"TELEGRAM_CHAT_ID"`
+	AppPort            string `mapstructure:"PORT"`
+	DBHost             string `mapstructure:"DB_HOST"`
+	DBUser             string `mapstructure:"DB_USER"`
+	DBPassword         string `mapstructure:"DB_PASSWORD"`
+	DBName             string `mapstructure:"DB_NAME"`
+	DBPort             string `mapstructure:"DB_PORT"`
+	RedisHost          string `mapstructure:"REDIS_HOST"`
+	RedisPort          string `mapstructure:"REDIS_PORT"`
+	FrontendURL        string `mapstructure:"FRONTEND_URL"`
+	TelegramBotToken   string `mapstructure:"TELEGRAM_BOT_TOKEN"`
+	TelegramChatID     string `mapstructure:"TELEGRAM_CHAT_ID"`
+	GoogleClientID     string `mapstructure:"GOOGLE_CLIENT_ID"`
+	GoogleClientSecret string `mapstructure:"GOOGLE_CLIENT_SECRET"`
+	GoogleRefreshToken string `mapstructure:"GOOGLE_REFRESH_TOKEN"`
+	GoogleCalendarID   string `mapstructure:"GOOGLE_CALENDAR_ID"`
 }
 
 func LoadConfig() (Config, error) {
@@ -36,12 +40,17 @@ func LoadConfig() (Config, error) {
 	viper.BindEnv("FRONTEND_URL")
 	viper.BindEnv("TELEGRAM_BOT_TOKEN")
 	viper.BindEnv("TELEGRAM_CHAT_ID")
+	viper.BindEnv("GOOGLE_CLIENT_ID")
+	viper.BindEnv("GOOGLE_CLIENT_SECRET")
+	viper.BindEnv("GOOGLE_REFRESH_TOKEN")
+	viper.BindEnv("GOOGLE_CALENDAR_ID")
 
 	// Default values
 	viper.SetDefault("PORT", "8080")
 	viper.SetDefault("DB_HOST", "localhost")
 	viper.SetDefault("DB_PORT", "5432")
 	viper.SetDefault("FRONTEND_URL", "http://localhost:3000")
+	viper.SetDefault("GOOGLE_CALENDAR_ID", "primary")
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Println("No .env file found, using environment variables")

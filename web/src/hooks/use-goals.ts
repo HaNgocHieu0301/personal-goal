@@ -13,7 +13,14 @@ const sortNodes = (a: GoalNode, b: GoalNode) => {
     if (a.status === 'done' && b.status !== 'done') return 1;
     if (a.status !== 'done' && b.status === 'done') return -1;
 
-    // 2. Fallback: sort by creation date ascending (oldest first)
+    // 2. Sort by priority (weight) descending
+    const weightA = a.weight || 0;
+    const weightB = b.weight || 0;
+    if (weightA !== weightB) {
+        return weightB - weightA;
+    }
+
+    // 3. Fallback: sort by creation date ascending (oldest first)
     const dateA = new Date(a.createdAt || 0).getTime();
     const dateB = new Date(b.createdAt || 0).getTime();
     return dateA - dateB;

@@ -106,13 +106,14 @@ Dựa trên yêu cầu về hiệu suất, khả năng mở rộng và định h
 * [x] Xây dựng Core Engine: Tạo và quản lý cây mục tiêu.  
 * [x] Implement logic tính % tiến độ dựa trên trọng số.  
 * [x] Dashboard "The Big 3".
-* [x] **Smart Sorting Logic**: Tự động xếp các thẻ Task (ưa tiên Trạng thái Done xuống dưới cùng, Undone ở nguyên vị trí cũ).
+* [x] **Smart Sorting Logic**: Tự động xếp các thẻ Task (Ưu tiên: Trạng thái Done xuống dưới cùng -> Task có độ ưu tiên cao Beast/High lên đầu -> Thời gian tạo).
 * [x] **Focus Timer & Notifications**: Bộ đếm ngược tích hợp cấu hình số phút tập trung linh hoạt và âm thanh thông báo "Ding" bằng Web Audio API. 
 * [x] **Auto-Complete Sessions**: Tự động đánh dấu hoàn thành Task thông qua việc tích đủ số quãng tập trung đặt ra trước đó (với Smart Conversion giữa Total Time và Sessions).
 * [x] **Inline Calendar Deadline**: Tích hợp nhanh ngày hết hạn cho từng Task chuyên biệt trên cấu trúc cây.
 * [x] **Session-Based Progress**: Logic tính tập trung vào số phiên hoàn thành, ghi đè 100% khi Done thủ công.
 * [x] **Focus Duration Overrides**: Cho phép mỗi task có một thời gian tập trung riêng biệt (vượt qua cấu hình global).
 * [x] **Smart Queue Management**: Thêm nhanh task daily trong Warrior Mode; soft-delete hoặc untoggle focus khi remove.
+* [x] **Kiểm soát hiển thị Daily Task**: Tách bạch hoàn toàn Daily Task (không có targetPeriod và parentId) ra khỏi cấu trúc tĩnh của tháng ở Architect Mode, chỉ giữ lại hiển thị tại Warrior Queue.
 * [x] **Persistence Engine**: Tự động lưu trạng thái đóng/mở sidebar và các lựa chọn UI của người dùng.
 
 ### **Giai đoạn 2: Discipline Engine**
@@ -123,6 +124,7 @@ Dựa trên yêu cầu về hiệu suất, khả năng mở rộng và định h
 
 ### **Giai đoạn 3: Optimization & Tools**
 
+* [x] **Yearly Compass & Timeline Hierarchy**: Cải tiến cấu trúc Sidebar Timeline, bao quát toàn bộ mục tiêu thông qua thành phần YearlyCompass. Hỗ trợ cơ chế inline edit và xóa an toàn (unlink sub-goals).
 * Tối ưu hóa phím tắt toàn diện.  
 * Viết CLI Tool (Go) để tương tác nhanh từ Terminal.  
 * Hệ thống thông báo nhắc nhở qua trình duyệt/gmail/telegram.

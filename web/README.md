@@ -1,6 +1,6 @@
-# Personal Goal OS - Frontend
+# Personal Goal - Frontend
 
-This is the Next.js frontend for the Personal Goal OS.
+This is the Next.js frontend for the Personal Goal.
 
 ## 🛠️ Stack
 

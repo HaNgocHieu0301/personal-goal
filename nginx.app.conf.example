@@ -1,4 +1,4 @@
-# Nginx configuration for Personal Goal OS
+# Nginx configuration for Personal Goal
 # Copy this file to your thcs-nginx container's conf.d folder
 # e.g., /deploy/thcs.../nginx/conf.d/personal-goal.conf
 

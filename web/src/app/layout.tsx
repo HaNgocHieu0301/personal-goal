@@ -15,7 +15,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Personal Goal OS",
+  title: "Personal Goal",
   description: "The Operating System for High Performers",
 };
 

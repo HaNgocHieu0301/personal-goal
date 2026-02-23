@@ -1,4 +1,4 @@
-# **TÀI LIỆU ĐỊNH NGHĨA SẢN PHẨM: PERSONAL GOAL OS (Hệ điều hành Mục tiêu Cá nhân)**
+# **TÀI LIỆU ĐỊNH NGHĨA SẢN PHẨM: Personal Goal (Hệ điều hành Mục tiêu Cá nhân)**
 
 ## **1\. TẦM NHÌN SẢN PHẨM (Vision)**
 
@@ -136,3 +136,4 @@ Dựa trên yêu cầu về hiệu suất, khả năng mở rộng và định h
 
 # IMPORTANT:
 - Luôn luôn cập nhật những thay đổi vào docs
+- Luôn luôn update version của hệ thống (Personal Goal v1.x.x) mỗi khi có thay đổi

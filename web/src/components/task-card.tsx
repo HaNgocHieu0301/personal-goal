@@ -41,6 +41,9 @@ export function TaskCard({ task }: TaskCardProps) {
         });
     };
 
+    const isDailyTask = !task.parentId && !task.targetPeriod;
+    const deadlineToUse = task.deadline ? new Date(task.deadline) : (isDailyTask ? new Date() : null);
+
     return (
         <Card className="w-full max-w-lg mx-auto border-slate-200/60 dark:border-primary/20 bg-white/80 dark:bg-neutral-900/40 backdrop-blur-xl shadow-2xl dark:shadow-primary/5 relative overflow-hidden group">
             {/* Subtle light effect */}
@@ -90,10 +93,10 @@ export function TaskCard({ task }: TaskCardProps) {
                             {task.description}
                         </p>
                     )}
-                    {task.deadline && (
+                    {deadlineToUse && (
                         <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-mono text-primary/80">
                             <Calendar className="h-3 w-3 mr-1.5" />
-                            <span>TERMINAL: {format(new Date(task.deadline), "yyyy.MM.dd")}</span>
+                            <span>TERMINAL: {format(deadlineToUse, "yyyy.MM.dd")}</span>
                         </div>
                     )}
                 </div>

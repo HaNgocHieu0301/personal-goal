@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 
 import { GoalTree } from "@/components/goal-tree";
 import { TaskCard } from "@/components/task-card";
-import { Plus, X, Crosshair, LayoutDashboard, ListChecks, Loader2, Maximize2, Minimize2 } from "lucide-react";
+import { Plus, X, Crosshair, LayoutDashboard, ListChecks, Loader2, Maximize2, Minimize2, Calendar } from "lucide-react";
+import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -113,8 +114,8 @@ export default function Home() {
           {/* Brand / Logo */}
           <div className="w-full md:w-auto flex justify-center md:justify-start">
             <div className="flex items-center gap-2 border border-border/50 bg-background/50 backdrop-blur-xl px-4 py-2 rounded-xl shadow-sm">
-              <span className="font-semibold tracking-tight">Personal Goal OS</span>
-              <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-mono font-medium">v0.1.0</span>
+              <span className="font-semibold tracking-tight">Personal Goal</span>
+              <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-mono font-medium">v1.1.2</span>
             </div>
           </div>
 
@@ -259,13 +260,32 @@ export default function Home() {
                           </h3>
                           <div className="flex items-center gap-2 mt-1">
                             <div className={cn(
-                              "w-1.5 h-1.5 rounded-full",
+                              "w-1.5 h-1.5 rounded-full shrink-0",
                               task.status === "done" ? "bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]" :
                                 task.status === "in-progress" ? "bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.5)]" : "bg-slate-400/50"
                             )} />
                             <span className="text-[9px] uppercase tracking-tight text-muted-foreground font-mono">
                               {task.status}
                             </span>
+                            {(() => {
+                              const isDailyTask = !task.parentId && !task.targetPeriod;
+                              const deadlineToUse = task.deadline ? new Date(task.deadline) : (isDailyTask ? new Date() : null);
+                              if (!deadlineToUse) return null;
+
+                              const isOverdue = deadlineToUse < new Date(new Date().setHours(0, 0, 0, 0));
+                              return (
+                                <>
+                                  <span className="text-[9px] text-muted-foreground/30">•</span>
+                                  <div className={cn(
+                                    "flex items-center text-[9px] font-mono",
+                                    isOverdue && task.status !== "done" ? "text-destructive font-bold inline-flex items-center rounded-sm bg-destructive/10 px-1" : "text-muted-foreground"
+                                  )}>
+                                    <Calendar className="w-2.5 h-2.5 mr-1" />
+                                    {format(deadlineToUse, "MMM dd")}
+                                  </div>
+                                </>
+                              );
+                            })()}
                           </div>
                         </div>
                       ))}

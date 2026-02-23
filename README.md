@@ -1,11 +1,8 @@
-# Personal Goal OS (Hệ điều hành Mục tiêu Cá nhân)
-
-## IMPORTANT:
-- Luôn luôn cập nhật những thay đổi vào docs
+# Personal Goal
 
 ## Mô tả chung
 
-Personal Goal OS là một nền tảng quản trị mục tiêu cá nhân giúp người dùng thu hẹp khoảng cách giữa **"Lập kế hoạch"** và **"Thực hiện"**. Hệ thống tập trung vào việc quản lý sự tập trung (Focus Management) hơn là chỉ quản lý công việc (Task Management).
+Personal Goal là một nền tảng quản trị mục tiêu cá nhân giúp người dùng thu hẹp khoảng cách giữa **"Lập kế hoạch"** và **"Thực hiện"**. Hệ thống tập trung vào việc quản lý sự tập trung (Focus Management) hơn là chỉ quản lý công việc (Task Management).
 
 ## 🚀 Tính năng cốt lõi
 
@@ -52,6 +49,3 @@ Truy cập ứng dụng tại `http://localhost:3000`.
 - `/backend`: Mã nguồn Golang API & Dockerfile.
 - `/web`: Mã nguồn Next.js Frontend.
 - `/docs`: Tài liệu thiết kế, kiến trúc (Architecture) và Roadmap.
-
----
-*Created with ❤️ by Antigravity*

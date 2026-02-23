@@ -1,5 +1,5 @@
 #!/bin/bash
-# Simple deploy script for Personal Goal OS
+# Simple deploy script for Personal Goal
 
 echo "🚀 Starting deployment..."
 

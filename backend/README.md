@@ -1,6 +1,6 @@
-# Personal Goal OS - Backend
+# Personal Goal - Backend
 
-This is the Golang backend for the Personal Goal OS.
+This is the Golang backend for the Personal Goal.
 
 ## 🛠️ Stack
 

@@ -9,7 +9,7 @@ export const INITIAL_METRICS: UserMetrics = {
 export const INITIAL_GOALS: GoalNode[] = [
     {
         id: "g-1",
-        title: "Build Personal Goal OS",
+        title: "Build Personal Goal",
         description: "The ultimate productivity tool for high performers",
         weight: 100,
         progress: 30,
